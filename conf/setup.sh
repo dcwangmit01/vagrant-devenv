@@ -43,7 +43,7 @@ sudo apt-get -y autoremove
 
 # add a few utils
 sudo apt-get install -y mysql-client unzip dc
-sudo apt-get install -y git bridge-utils traceroute nmap dhcpdump wget curl siege whois
+sudo apt-get install -y git bridge-utils traceroute nmap dhcpdump wget curl whois
 sudo apt-get install -y emacs24-nox screen tree git
 sudo apt-get install -y apache2-utils # for htpasswd
 sudo apt-get install -y python-pip python-dev
@@ -60,13 +60,13 @@ fi
 #  * For example, ecs-cli enables docker-compose
 #  * Uses the same configuration file as the aws cli
 if ! which ecs-cli; then
-    sudo curl -o /usr/local/bin/ecs-cli https://s3.amazonaws.com/amazon-ecs-cli/ecs-cli-linux-amd64-latest
+    sudo curl -s -o /usr/local/bin/ecs-cli https://s3.amazonaws.com/amazon-ecs-cli/ecs-cli-linux-amd64-latest
     sudo chmod +x /usr/local/bin/ecs-cli
 fi
 
 # install docker
 if ! which docker; then
-    sudo wget -qO- https://get.docker.com/ | sudo sh
+    sudo curl -s https://get.docker.com/ | sudo sh
     sudo usermod -aG docker root
     sudo usermod -aG docker vagrant
 fi
@@ -118,3 +118,12 @@ fi
 # Ensure user ownership
 sudo chown -R vagrant:vagrant /home/vagrant
 
+# install google cloud tools
+if ! sudo -i -u vagrant which gcloud; then
+    sudo -i -u vagrant curl -s https://sdk.cloud.google.com | sudo -i -u vagrant \
+      CLOUDSDK_CORE_DISABLE_PROMPTS=1 CLOUDSDK_INSTALL_DIR=/home/vagrant bash
+    sudo -i -u vagrant ./google-cloud-sdk/bin/gcloud \
+      config set disable_usage_reporting true
+    sudo -i -u vagrant ./google-cloud-sdk/bin/gcloud \
+      components install -q kubectl
+fi
