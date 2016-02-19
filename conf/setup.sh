@@ -119,11 +119,36 @@ fi
 sudo chown -R vagrant:vagrant /home/vagrant
 
 # install google cloud tools
-if ! sudo -i -u vagrant which gcloud; then
-    sudo -i -u vagrant curl -s https://sdk.cloud.google.com | sudo -i -u vagrant \
+if [ ! -f /home/vagrant/google-cloud-sdk/bin/gcloud ] ; then
+    curl -s https://sdk.cloud.google.com | sudo -i -u vagrant \
       CLOUDSDK_CORE_DISABLE_PROMPTS=1 CLOUDSDK_INSTALL_DIR=/home/vagrant bash
     sudo -i -u vagrant ./google-cloud-sdk/bin/gcloud \
       config set disable_usage_reporting true
     sudo -i -u vagrant ./google-cloud-sdk/bin/gcloud \
       components install -q kubectl
 fi
+
+# install golang (binaries into /usr/local/go/bin)
+if ! which go; then
+    PACKAGE=go1.6.linux-amd64.tar.gz
+    pushd /tmp
+    wget -q https://storage.googleapis.com/golang/$PACKAGE
+    tar -C /usr/local -xzf $PACKAGE
+    rm -f $PACKAGE
+    popd
+fi
+
+# install autoenv (will auto-execute any ".env" file in a parent dir)
+if ! which activate.sh; then
+    pip install autoenv
+fi
+
+
+# setup the .bashrc by appending the custom one
+if [ -f /home/vagrant/.bashrc ] ; then
+    # Truncates the Custom part of the config and below
+    sed -n '/## Custom:/q;p' -i /home/vagrant/.bashrc
+    # Appends custom bashrc
+    cat /vagrant/conf/dot.bashrc >> /home/vagrant/.bashrc
+fi
+
