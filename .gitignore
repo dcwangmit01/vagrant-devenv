@@ -2,8 +2,4 @@
 !.exists
 .vagrant
 .lastupdated
-secrets/dot.aws/credentials
-secrets/dot.aws/config
-secrets/dot.rax/dot.supernova
-secrets/dot.ssh/
-conf/dot.gitconfig
+*.private
