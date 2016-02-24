@@ -8,6 +8,7 @@ Creates a Vagrant machine running on OSX, with the following auto-installed and 
 * Docker Tools: docker, docker-compose
 * Kubernetes Tools: kubectl
 * Network Tools: nmap, traceroute, whois
+* Languages: golang
 
 # Preparing your box for Vagrant
 
@@ -53,8 +54,8 @@ All of these will make your life easier:
 Set defaults for your git configuration (email, name, aliases, etc)
 
 ```
-cp ./conf/dot.gitconfig.example ./conf/dot.gitconfig
-edit ./conf/dot.gitconfig
+cp ./conf/dot.gitconfig.example ./conf/dot.gitconfig.private
+edit ./conf/dot.gitconfig.private
 ```
 
 ### Configure AWS CLI Tools (Optional)
@@ -64,11 +65,11 @@ The pre-installed AWS cli commands require configuration to work.
 Documentation for configuration is found here [http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html#cli-config-files](AWS CLI Configuration)
 
 ```
-cp ./secrets/dot.aws/config.example ./secrets/dot.aws/config
-edit ./secrets/dot.aws/config
+cp ./conf/dot.aws/config.example ./conf/dot.aws/config.private
+edit ./conf/dot.aws/config.private
 
-cp ./secrets/dot.aws/credentials.example ./secrets/dot.aws/credentials
-edit ./secrets/dot.aws/credentials
+cp ./conf/dot.aws/credentials.example ./conf/dot.aws/credentials.private
+edit ./conf/dot.aws/credentials.private
 ```
 
 ### Configurate Rackspace CLI Tools (Optional)
@@ -76,18 +77,19 @@ edit ./secrets/dot.aws/credentials
 The pre-installed Rackspace cli commands require configuration to work.
 
 ```
-cp ./secrets/dot.rax/dot.supernova.example ./secrets/dot.rax/dot.supernova
-edit ./secrets/dot.rax/dot.supernova
+cp ./conf/dot.rax/dot.supernova.example ./conf/dot.rax/dot.supernova.private
+edit ./conf/dot.rax/dot.supernova.private
 ```
 
 ### Configure SSH Keys (Optional)
 
 If you'd like to put your ssh directory on the vagrant box, so that you may ssh
 from the vagrant machine as you would your host machine, copy the contents of
-your .ssh directory to ./secrets/dot.ssh/
+your .ssh directory to ./conf/dot.ssh.private/
 
 ```
-cp ~/.ssh/* ./secrets/dot.ssh/
+mkdir ./conf/dot.ssh.private
+cp ~/.ssh/* ./conf/dot.ssh.private/
 ```
 
 ### Configure Code Directory Mount (Optional)
