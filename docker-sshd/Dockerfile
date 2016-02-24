@@ -14,7 +14,7 @@ RUN apt-get update && \
     sed -i 's/ChallengeResponseAuthentication yes/ChallengeResponseAuthentication no/' /etc/ssh/sshd_config
 
 # set authorized_keys
-COPY ./secrets/dot.ssh/id_rsa.pub /root/.ssh/authorized_keys
+COPY ./conf/dot.ssh.private/id_rsa.pub /root/.ssh/authorized_keys
 
 # expose the port (kube will fail if less than 1024)
 EXPOSE 2022

@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: docker-sshd
+  labels:
+    component: docker-sshd
+    role: debug
+spec:
+  selector:
+    component: docker-sshd
+    role: debug
+  ports:
+  - name: sshd
+    port: 22
+    targetPort: 2022
+    protocol: TCP
+  type: LoadBalancer
