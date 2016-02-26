@@ -49,6 +49,14 @@ vagrant plugin install vagrant-cachier
 
 All of these will make your life easier:
 
+### Decrypt Private Configurations (Optional)
+
+If you are me:
+
+```
+./bin/secure.sh decrypt
+```
+
 ### Configure Git Configuration (Optional)
 
 Set defaults for your git configuration (email, name, aliases, etc)
