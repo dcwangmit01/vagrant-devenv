@@ -1,26 +1,26 @@
 
 .PHONY: deps build install docker clean mrclean
 
+# "export" allows Makefile targets to see these values (local to this Makefile)
 # ?= means set only if no value
-# set default tag to be last 8 chars hash of Dockerfile
+# without "export" makefile targets will not see these values
+# set default tag to be last 8 chars hash of last git commit
+export CONTAINER ?= docker-sshd
+export VERSION ?= $(shell git log -1|grep commit|awk '{print $$2}'|tail -c 8|xargs)
+export PROJECT ?= $(shell gcloud config list 2>/dev/null|grep project| cut -d'=' -f2| xargs)
+export IMAGE ?= gcr.io/$(PROJECT)/$(CONTAINER):$(VERSION)
 
-CONTAINER ?= docker-sshd
-VERSION ?= $(shell shasum Dockerfile |awk '{print $$1}'|tail -c 8|xargs)
-PROJECT ?= $(shell gcloud config list 2>/dev/null|grep project| cut -d'=' -f2| xargs)
-IMAGE ?= gcr.io/$(PROJECT)/$(CONTAINER):$(VERSION)
-
-env:
+debug:
 	@echo container: $(CONTAINER)
 	@echo version: $(VERSION)
 	@echo project: $(PROJECT)
 	@echo image: $(IMAGE)
-	@echo tag: $(TAG)
 
 auth:
 	gcloud auth login
 
-docker:
-	@# set the build context out one directory to access the secrets dir
+docker-build:
+	@# set the build context out one directory to access the secrets dir for ssh.pubkey
 	docker build -t $(IMAGE) -f Dockerfile ../
 
 docker-run:
@@ -28,10 +28,20 @@ docker-run:
 
 docker-connect:
 	@# connect to the existing running docker instance
-	docker exec -it docker-sshd-run /bin/bash
+	docker exec -it $(CONTAINER)-run /bin/bash
 
 docker-run-bash:
 	docker run --rm -i -t $(IMAGE) /bin/bash
 
-docker-push:
+docker-push: docker-build
 	gcloud docker push $(IMAGE)
+
+kube-create:
+	@# replace the image before feeding to kubectl
+	-sed "s|image:.*$$|image: $(IMAGE)|g" kube/sshd-rc.yaml | kubectl create -f -
+	-kubectl create -f kube/sshd-svc.yaml
+
+kube-delete:
+	-kubectl delete -f kube/sshd-rc.yaml
+	-kubectl delete -f kube/sshd-svc.yaml
+

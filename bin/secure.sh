@@ -75,7 +75,7 @@ case "$COMMAND" in
 	    echo "  $PRIVATE_FILE"
 	    echo "    as"
 	    echo "  $ENCRYPTED_FILE"
-	    tar cjv $PRIVATE_FILE | gpg -q --yes --output $ENCRYPTED_FILE --encrypt $RECIPIENTS
+	    tar cjv $PRIVATE_FILE | gpg -q --batch --yes --trust-model always --output $ENCRYPTED_FILE --encrypt $RECIPIENTS
 	done
 
 	# Next, multi-party encrypt directories
@@ -88,7 +88,7 @@ case "$COMMAND" in
 	    echo "  $PRIVATE_DIR"
 	    echo "    as"
 	    echo "  $ENCRYPTED_DIR"
-	    tar cjv $PRIVATE_DIR | gpg -q --yes --output $ENCRYPTED_DIR --encrypt $RECIPIENTS
+	    tar cjv $PRIVATE_DIR | gpg -q --batch --yes --trust-model always --output $ENCRYPTED_DIR --encrypt $RECIPIENTS
 	done
 	;;
 
@@ -107,7 +107,7 @@ case "$COMMAND" in
 	    echo "  $ENCRYPTED_DIR"
 	    echo "    as"
 	    echo "  $PRIVATE_DIR"
-	    echo "$PASSWORD" | gpg -q --batch --passphrase-fd 0 --yes --decrypt $ENCRYPTED_DIR | tar xjv -C .
+	    echo "$PASSWORD" | gpg -q --batch --yes --passphrase-fd 0 --decrypt $ENCRYPTED_DIR | tar xjv -C .
 	done
 
         # Next, multi-party decrypt files
@@ -120,7 +120,7 @@ case "$COMMAND" in
 	    echo "  $ENCRYPTED_FILE"
 	    echo "    as"
 	    echo "  $PRIVATE_FILE"
-	    echo "$PASSWORD" | gpg -q --batch --passphrase-fd 0 --yes --decrypt $ENCRYPTED_FILE | tar xjv > $PRIVATE_FILE
+	    echo "$PASSWORD" | gpg -q --batch --yes --passphrase-fd 0 --decrypt $ENCRYPTED_FILE | tar xjv > $PRIVATE_FILE
 	done
 
 	;;
