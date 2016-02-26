@@ -58,6 +58,40 @@ cp ./conf/dot.gitconfig.example ./conf/dot.gitconfig.private
 edit ./conf/dot.gitconfig.private
 ```
 
+### Configure Google Cloud and Container Engine (Optional)
+
+```
+# login to google cloud
+gcloud auth login
+
+# disable usage reporting to google
+gcloud config set disable_usage_reporting true
+
+# locate your project id
+gcloud projects list
+
+# set default project
+gcloud config set core/project <project_id>
+
+# locate your zone
+gcloud compute zones list
+
+# set default zone
+gcloud config set compute/zone <zone_id>
+
+# locate your cluster
+gcloud container clusters list
+
+# set default cluster
+gcloud config set container/cluster <cluster_id>
+
+# configure kubectl in google's environment
+gcloud container clusters get-credentials <cluster_id>
+
+# check your config
+gcloud config list
+```
+
 ### Configure AWS CLI Tools (Optional)
 
 The pre-installed AWS cli commands require configuration to work.
