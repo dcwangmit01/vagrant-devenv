@@ -1,5 +1,17 @@
 set -x
 
+# set apt mirror at top of sources.list for faster downloads
+if [ ! -f /etc/apt/sources.list.orig ]; then
+    sudo mv /etc/apt/sources.list /etc/apt/sources.list.orig
+    echo "# Setting Mirrors" | sudo tee -a /etc/apt/sources.list > /dev/null
+    echo "deb mirror://mirrors.ubuntu.com/mirrors.txt precise main restricted universe multiverse" | sudo tee -a  /etc/apt/sources.list > /dev/null
+    echo "deb mirror://mirrors.ubuntu.com/mirrors.txt precise-updates main restricted universe multiverse" | sudo tee -a /etc/apt/sources.list > /dev/null
+    echo "deb mirror://mirrors.ubuntu.com/mirrors.txt precise-backports main restricted universe multiverse" | sudo tee -a /etc/apt/sources.list > /dev/null
+    echo "deb mirror://mirrors.ubuntu.com/mirrors.txt precise-security main restricted universe multiverse" | sudo tee -a /etc/apt/sources.list > /dev/null
+    echo "" | sudo tee -a /etc/apt/sources.list > /dev/null
+    cat /etc/apt/sources.list.orig | sudo tee -a /etc/apt/sources.list > /dev/null
+fi
+
 # Disabling excess APT error messages from being shown
 sudo ex +"%s@DPkg@//DPkg" -cwq /etc/apt/apt.conf.d/70debconf
 sudo dpkg-reconfigure debconf -f noninteractive -p critical
