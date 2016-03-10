@@ -10,6 +10,9 @@ if [ ! -f /etc/apt/sources.list.orig ]; then
     echo "deb mirror://mirrors.ubuntu.com/mirrors.txt precise-security main restricted universe multiverse" | sudo tee -a /etc/apt/sources.list > /dev/null
     echo "" | sudo tee -a /etc/apt/sources.list > /dev/null
     cat /etc/apt/sources.list.orig | sudo tee -a /etc/apt/sources.list > /dev/null
+    # workaround bug: https://bugs.launchpad.net/ubuntu/+source/apt/+bug/1479045
+    sudo rm -f /var/lib/apt/lists/partial/*
+    sudo apt-get clean
 fi
 
 # Disabling excess APT error messages from being shown
@@ -18,13 +21,13 @@ sudo dpkg-reconfigure debconf -f noninteractive -p critical
 
 # Upgrade
 sudo apt-get update
-sudo apt-get -y upgrade
 sudo apt-get -y autoremove
+sudo apt-get -y upgrade
 
 # add a few utils
 sudo apt-get install -y mysql-client unzip dc gnupg
 sudo apt-get install -y git bridge-utils traceroute nmap dhcpdump wget curl whois
-sudo apt-get install -y emacs24-nox screen tree git
+sudo apt-get install -y emacs24-nox screen tree git moreutils
 sudo apt-get install -y apache2-utils # for htpasswd
 sudo apt-get install -y python-pip python-dev
 
@@ -45,9 +48,24 @@ if ! which virtualenv; then
     sudo pip install virtualenv
 fi
 
+# install python jinja cli tool
+if ! which j2; then
+    sudo pip install j2cli # a jinja2 cli tool
+fi
+
+# install yq: a cli yaml editor
+if ! which yq; then
+    curl -s https://raw.githubusercontent.com/dcwangmit01/yq/master/install.sh | sudo bash
+fi
+
+# install secure: a gpg multiparty encryption wrapper
+if ! which secure; then
+    curl -s https://raw.githubusercontent.com/dcwangmit01/secure/master/install.sh | sudo bash
+fi
+
 # install rack (command line client for managing rackspace cloud resources)
 if ! which rack; then
-    pushd /tmp
+    pushd /tmp 
     wget --quiet https://ec4a542dbf90c03b9f75-b342aba65414ad802720b41e8159cf45.ssl.cf5.rackcdn.com/1.0.1/Linux/amd64/rack
     chmod a+x rack
     mkdir -p /usr/local/bin/
@@ -93,6 +111,7 @@ fi
 # install nodejs and npm
 if ! which nodejs; then
     sudo apt-get -y install nodejs npm
+    sudo ln -s /usr/bin/nodejs /usr/bin/node
 fi
 
 # install google cloud tools
@@ -106,7 +125,7 @@ if [ ! -f /home/vagrant/google-cloud-sdk/bin/gcloud ] ; then
 fi
 
 # install golang (binaries into /usr/local/go/bin)
-if ! which go; then
+if [ ! -f /usr/local/go/bin/go ]; then
     PACKAGE=go1.6.linux-amd64.tar.gz
     pushd /tmp
     wget -q https://storage.googleapis.com/golang/$PACKAGE
@@ -120,23 +139,49 @@ if ! which activate.sh; then
     sudo pip install autoenv
 fi
 
-# setup the .bashrc by appending the custom one
-if [ -f /home/vagrant/.bashrc ] ; then
-    # Truncates the Custom part of the config and below
-    sed -n '/## Custom:/q;p' -i /home/vagrant/.bashrc
-    # Appends custom bashrc
-    cat /vagrant/conf/dot.bashrc >> /home/vagrant/.bashrc
+# Install a more recent version of screen that supports vertical split
+if ! screen -v | grep "4.03"; then
+    pushd /tmp
+    wget http://ftp.us.debian.org/debian/pool/main/n/ncurses/libtinfo5_6.0+20160213-1_amd64.deb
+    sudo dpkg -i libtinfo5_6.0+20160213-1_amd64.deb
+    wget http://ftp.us.debian.org/debian/pool/main/s/screen/screen_4.3.1-2_amd64.deb
+    sudo dpkg -i screen_4.3.1-2_amd64.deb
+    rm libtinfo*.deb screen*.deb
+    popd
 fi
 
-# copy .dot files over
-cp dot.emacs /home/vagrant/.emacs
-cp dot.screenrc /home/vagrant/.screenrc
-sudo cp dot.emacs /root/.emacs
-sudo cp dot.screenrc /root/.screenrc
+# setup the .bashrc by appending the custom one
+if [ ! -f /home/vagrant/.bashrc.orig ]; then
+    sudo cp /home/vagrant/.bashrc /home/vagrant/.bashrc.orig
+    # Truncates the Custom part of the config and below
+    sudo sed -n '/## Custom:/q;p' -i /home/vagrant/.bashrc
+    # Appends custom bashrc
+    cat /vagrant/conf/dot.bashrc | sudo tee -a /home/vagrant/.bashrc > /dev/null
+fi
+
+# Setup Optional Bash Aliases Custom Configuration
+if [ -f /vagrant/conf/.bash_aliases ]; then
+    sudo ln -s /vagrant/conf/dot.bash_aliases /home/vagrant/.bash_aliases
+fi
+
+# link .dot files over
+sudo rm -f /home/vagrant/.emacs
+sudo ln -s /vagrant/conf/dot.emacs /home/vagrant/.emacs
+sudo rm -f /home/vagrant/.screenrc
+sudo ln -s /vagrant/conf/dot.screenrc /home/vagrant/.screenrc
+sudo rm -f /home/vagrant/.bash_aliases
+sudo ln -s /vagrant/conf/dot.bash_aliases /home/vagrant/.bash_aliases
+
+sudo rm -f /root/.emacs
+sudo ln -s /vagrant/conf/dot.emacs /root/.emacs
+sudo rm -f /root/.screenrc
+sudo ln -s /vagrant/conf/dot.screenrc /root/.screenrc
+sudo rm -f /root/.bash_aliases
+sudo ln -s /vagrant/conf/dot.bash_aliases /root/.bash_aliases
 
 # Setup Optional Git Configuration
 if [ -f /vagrant/conf/dot.gitconfig.private ]; then
-    sudo cp -f /vagrant/conf/dot.gitconfig.private /home/vagrant/.gitconfig
+    sudo ln -s /vagrant/conf/dot.gitconfig.private /home/vagrant/.gitconfig
 fi
 
 # Setup Optional SSH Configuration
@@ -156,10 +201,11 @@ mkdir -p /home/vagrant/.aws
 ln -s /vagrant/conf/dot.aws/credentials.private /home/vagrant/.aws/credentials
 
 # Setup Optional Rackspace CLI Configuration
-rm -rf /home/vagrant/.supernova
-rm -rf /home/vagrant/.superglance
+rm -f /home/vagrant/.supernova
 ln -s /vagrant/conf/dot.rax/dot.supernova.private /home/vagrant/.supernova
+rm -f /home/vagrant/.superglance
 ln -s /vagrant/conf/dot.rax/dot.supernova.private /home/vagrant/.superglance
 
 # Ensure user ownership
 sudo chown -R vagrant:vagrant /home/vagrant
+
