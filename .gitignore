@@ -3,3 +3,4 @@
 .vagrant
 .lastupdated
 *.private
+.DS_Store
