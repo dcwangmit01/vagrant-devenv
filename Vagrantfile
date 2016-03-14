@@ -78,7 +78,7 @@ Vagrant.configure(2) do |config|
     #   dev.vm.synced_folder "~/Dev", "/vagrant/Dev"
     # end
     # custom: above does not work for symlinks
-    dev.vm.synced_folder "~/Dev", "/Dev"
+    dev.vm.synced_folder "~/Dev", "/home/vagrant/Dev"
 
     dev.vm.provider "virtualbox" do |vb|
       vb.gui = false
@@ -88,9 +88,9 @@ Vagrant.configure(2) do |config|
     dev.vm.provision "shell",
                         run: "always",
                         inline: <<-SHELL
-      cd /vagrant/conf
+      pushd /vagrant/conf
       chmod 755 setup.sh && ./setup.sh
-      cd /vagrant
+      popd
     SHELL
 
     dev.ssh.forward_x11 = true

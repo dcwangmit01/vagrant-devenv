@@ -6,7 +6,7 @@ ENV DEBIAN_FRONTEND noninteractive
 
 # install the program
 RUN apt-get update && \
-    apt-get install -y openssh-server && \
+    apt-get install -y openssh-server curl && \
     mkdir /var/run/sshd && \
     sed -i 's/Port 22/Port 2022/' /etc/ssh/sshd_config && \
     sed -i 's/UsePAM yes/UsePAM no/' /etc/ssh/sshd_config && \
