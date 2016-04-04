@@ -40,7 +40,7 @@ apt-get -y upgrade
 # 
 # moreutils: for sponge
 # apache2-utils: for htpasswd
-apt-get -y install mysql-client unzip dc gnupg \
+apt-get -y install mysql-client unzip dc gnupg moreutils \
 	git bridge-utils traceroute nmap dhcpdump wget curl siege whois \
 	emacs24-nox screen tree git \
 	apache2-utils \
@@ -79,10 +79,20 @@ if ! which go; then
     popd
 fi
 
-# Install autoenv (will auto-execute any ".env" file in a parent dir)
-#   Used by projects to auto-set GOPATH upon cd into directory.
-if ! which activate.sh; then
-    pip install autoenv
+# install aws command line interface: https://aws.amazon.com/cli/
+if ! which aws; then
+    pip install awscli
+fi
+
+# Install direnv
+if ! which direnv; then
+    TMP=/tmp/direnv-install
+    mkdir -p $TMP
+    pushd $TMP
+    wget http://ftp.us.debian.org/debian/pool/main/d/direnv/direnv_2.7.0-1_amd64.deb
+    dpkg -i *.deb
+    rm -rf $TMP
+    popd
 fi
 
 # Install python virtualenv
@@ -106,15 +116,29 @@ if ! which secure; then
 fi
 
 # Install a more recent version of screen that supports vertical split
-if ! screen -v | grep "4.03"; then
+if ! screen -v | grep "4.02"; then
     TMP=/tmp/screen-install
     mkdir -p $TMP
     pushd $TMP
-    wget http://ftp.us.debian.org/debian/pool/main/n/ncurses/libtinfo5_6.0+20160213-1_amd64.deb
-    wget http://ftp.us.debian.org/debian/pool/main/s/screen/screen_4.3.1-2_amd64.deb
+    wget http://mirrors.kernel.org/ubuntu/pool/main/s/screen/screen_4.2.1-2~ubuntu14.04.1_amd64.deb
     dpkg -i *.deb
     rm -rf $TMP
     popd
+fi
+
+# Install gitslave
+if ! which gits; then
+    # Use a forked version of gitslave because it hasn't been updated
+    # in a long time, and commands like "gits status" no longer work
+    # with more recent versions of git.
+    TMP=/tmp/gitslave-install
+    mkdir -p $TMP
+    pushd $TMP
+    git clone https://github.com/joelpurra/gitslave.git
+    cd gitslave
+    make install
+    popd
+    rm -rf $TMP
 fi
 
 #####################################################################
@@ -142,25 +166,37 @@ fi
 # Setup Optional GNUPG Configuration
 FROM_DIR=/vagrant/conf/dot.gnupg.private
 TO_DIR=/home/vagrant/.gnupg
-if [ ! -d "${TO_DIR}" ]; then
-  cp -r ${FROM_DIR} ${TO_DIR}
+if [ -d "${FROM_DIR}" ]; then
+  rm -rf ${TO_DIR}
+  mkdir -p ${TO_DIR}
+  cp -r ${FROM_DIR}/* ${TO_DIR}
   chmod 700 ${TO_DIR}
   chown -R vagrant:vagrant ${TO_DIR}
 fi
 
 # Setup Optional Git Configuration
-if [ ! -f /vagrant/conf/dot.gitconfig.private ]; then
+if [ -f /vagrant/conf/dot.gitconfig.private ]; then
     ln -s /vagrant/conf/dot.gitconfig.private /home/vagrant/.gitconfig
 fi
 
 # Setup Optional Emacs Configuration
-if [ ! -f /vagrant/conf/dot.emacs.private ]; then
+if [ -f /vagrant/conf/dot.emacs.private ]; then
     ln -s /vagrant/conf/dot.emacs.private /home/vagrant/.emacs
 fi
 
 # Setup Optional Screen Configuration
-if [ ! -f /vagrant/conf/dot.screenrc.private ]; then
+if [ -f /vagrant/conf/dot.screenrc.private ]; then
     ln -s /vagrant/conf/dot.screenrc.private /home/vagrant/.screenrc
+fi
+
+# Setup Optional AWS CLI Configuration
+if [ -f /vagrant/conf/dot.aws/config.private ]; then
+    mkdir -p /home/vagrant/.aws
+    ln -s /vagrant/conf/dot.aws/config.private /home/vagrant/.aws/config
+fi
+if [ -f /vagrant/conf/dot.aws/credentials.private ]; then
+    mkdir -p /home/vagrant/.aws
+    ln -s /vagrant/conf/dot.aws/credentials.private /home/vagrant/.aws/credentials
 fi
 
 #####################################################################
@@ -168,8 +204,6 @@ fi
 
 # Ensure user ownership
 chown -R vagrant:vagrant /home/vagrant
-
-
 
 #####################################################################
 # Additionally, a whole bunch of things I may want to delete
@@ -198,11 +232,6 @@ fi
 if ! which superglance; then
     apt-get -y install -y python-dev python-pip libffi-dev libssl-dev
     pip install git+https://github.com/rtgoodwin/superglance.git@master
-fi
-
-# install aws command line interface: https://aws.amazon.com/cli/
-if ! which aws; then
-    pip install awscli
 fi
 
 # install aws ecs cli
@@ -241,11 +270,6 @@ rm -f /root/.screenrc
 ln -s /vagrant/conf/dot.screenrc /root/.screenrc
 rm -f /root/.bash_aliases
 ln -s /vagrant/conf/dot.bash_aliases /root/.bash_aliases
-
-# Setup Optional AWS CLI Configuration
-rm -rf /home/vagrant/.aws
-mkdir -p /home/vagrant/.aws
-ln -s /vagrant/conf/dot.aws/credentials.private /home/vagrant/.aws/credentials
 
 # Setup Optional Rackspace CLI Configuration
 rm -f /home/vagrant/.supernova
