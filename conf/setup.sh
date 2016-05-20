@@ -228,6 +228,13 @@ if ! which terraform; then
     popd
 fi
 
+# Install Ansible
+if ! which ansible; then
+    apt-add-repository -y ppa:ansible/ansible
+    apt-get update
+    apt-get -y install ansible python-netaddr
+fi
+
 #####################################################################
 # Cleanup
 
