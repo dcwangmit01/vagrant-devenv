@@ -1,6 +1,11 @@
-.#*
-!.exists
-.vagrant
-.lastupdated
-*.private
+#######################################
+# OSX, virtualenvs, private files, emacs
 .DS_Store
+*/env/*
+*/venv/*
+*/.venv/*
+*.private
+.#*
+*~
+.vagrant
+#######################################

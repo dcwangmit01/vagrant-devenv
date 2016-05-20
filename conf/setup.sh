@@ -47,6 +47,81 @@ apt-get -y install mysql-client unzip dc gnupg moreutils \
 	python-pip python-dev
 
 #####################################################################
+# Configuration
+#   Do this before tool installation to ensure symlinks can be created
+#   before written to)
+
+# Setup the .bashrc by appending the custom one
+if [ -f /home/vagrant/.bashrc ] ; then
+    # Truncates the Custom part of the config and below
+    sed -n '/## Custom:/q;p' -i /home/vagrant/.bashrc
+    # Appends custom bashrc
+    cat /vagrant/conf/dot.bashrc >> /home/vagrant/.bashrc
+fi
+
+# Copy Optional SSH Configuration
+#   This may not be necessary if you use ssh-agent
+FROM_DIR=/vagrant/conf/dot.ssh.private
+TO_DIR=/home/vagrant/.ssh
+if [ -f "${FROM_DIR}/id_rsa" ]; then
+  cp ${FROM_DIR}/id_rsa ${TO_DIR}/id_rsa
+  chmod 600 ${TO_DIR}/id_rsa
+  cat ${FROM_DIR}/id_rsa.pub >> ${TO_DIR}/authorized_keys
+  cp ${FROM_DIR}/id_rsa.pub ${TO_DIR}/id_rsa.pub
+  chown -R vagrant:vagrant ${TO_DIR}
+  chmod -R 700 ${TO_DIR}
+fi
+
+# Setup Optional AWS CLI Configuration
+FROM_DIR=/vagrant/conf/dot.aws.private
+TO_DIR=/home/vagrant/.aws
+if [ -d $FROM_DIR ] && [ ! -e $TO_DIR ]; then
+    mkdir -p `dirname $TO_DIR`
+    ln -s $FROM_DIR $TO_DIR
+fi
+
+# Setup Optional GNUPG Configuration
+#   This is necessary unless you want to do ssh latest-version hackery
+#   to enable gpg-agent socket forwarding.
+FROM_DIR=/vagrant/conf/dot.gnupg.private
+TO_DIR=/home/vagrant/.gnupg
+if [ -d $FROM_DIR ] && [ ! -e $TO_DIR ]; then
+    mkdir -p `dirname $TO_DIR`
+    ln -s $FROM_DIR $TO_DIR
+fi
+
+# Setup Optional Gcloud Config
+FROM_DIR=/vagrant/conf/dot.gcloud.private
+TO_DIR=/home/vagrant/.config/gcloud
+if [ -d $FROM_DIR ] && [ ! -e $TO_DIR ]; then
+    mkdir -p `dirname $TO_DIR`
+    ln -s $FROM_DIR $TO_DIR
+fi
+
+# Setup Optional Kube Config
+FROM_DIR=/vagrant/conf/dot.kube.private
+TO_DIR=/home/vagrant/.kube
+if [ -d $FROM_DIR ] && [ ! -e $TO_DIR ]; then
+    mkdir -p `dirname $TO_DIR`
+    ln -s $FROM_DIR $TO_DIR
+fi
+
+# Setup Optional Git Configuration
+if [ -f /vagrant/conf/dot.gitconfig.private ]; then
+    ln -s /vagrant/conf/dot.gitconfig.private /home/vagrant/.gitconfig
+fi
+
+# Setup Optional Emacs Configuration
+if [ -f /vagrant/conf/dot.emacs.private ]; then
+    ln -s /vagrant/conf/dot.emacs.private /home/vagrant/.emacs
+fi
+
+# Setup Optional Screen Configuration
+if [ -f /vagrant/conf/dot.screenrc.private ]; then
+    ln -s /vagrant/conf/dot.screenrc.private /home/vagrant/.screenrc
+fi
+
+#####################################################################
 # Install Miscellaneous Tools
 
 # Install docker
@@ -141,62 +216,16 @@ if ! which gits; then
     rm -rf $TMP
 fi
 
-#####################################################################
-# Configuration
-
-# Setup the .bashrc by appending the custom one
-if [ -f /home/vagrant/.bashrc ] ; then
-    # Truncates the Custom part of the config and below
-    sed -n '/## Custom:/q;p' -i /home/vagrant/.bashrc
-    # Appends custom bashrc
-    cat /vagrant/conf/dot.bashrc >> /home/vagrant/.bashrc
-fi
-
-# Setup Optional SSH Configuration
-FROM_DIR=/vagrant/conf/dot.ssh.private
-TO_DIR=/home/vagrant/.ssh
-if [ -f "${FROM_DIR}/id_rsa" ]; then
-  sudo cp ${FROM_DIR}/id_rsa ${TO_DIR}/id_rsa
-  sudo chmod 600 ${TO_DIR}/id_rsa
-  sudo cat ${FROM_DIR}/id_rsa.pub >> ${TO_DIR}/authorized_keys
-  sudo cp ${FROM_DIR}/id_rsa.pub ${TO_DIR}/id_rsa.pub
-  sudo chown -R vagrant:vagrant ${TO_DIR}
-fi
-
-# Setup Optional GNUPG Configuration
-FROM_DIR=/vagrant/conf/dot.gnupg.private
-TO_DIR=/home/vagrant/.gnupg
-if [ -d "${FROM_DIR}" ]; then
-  rm -rf ${TO_DIR}
-  mkdir -p ${TO_DIR}
-  cp -r ${FROM_DIR}/* ${TO_DIR}
-  chmod 700 ${TO_DIR}
-  chown -R vagrant:vagrant ${TO_DIR}
-fi
-
-# Setup Optional Git Configuration
-if [ -f /vagrant/conf/dot.gitconfig.private ]; then
-    ln -s /vagrant/conf/dot.gitconfig.private /home/vagrant/.gitconfig
-fi
-
-# Setup Optional Emacs Configuration
-if [ -f /vagrant/conf/dot.emacs.private ]; then
-    ln -s /vagrant/conf/dot.emacs.private /home/vagrant/.emacs
-fi
-
-# Setup Optional Screen Configuration
-if [ -f /vagrant/conf/dot.screenrc.private ]; then
-    ln -s /vagrant/conf/dot.screenrc.private /home/vagrant/.screenrc
-fi
-
-# Setup Optional AWS CLI Configuration
-if [ -f /vagrant/conf/dot.aws/config.private ]; then
-    mkdir -p /home/vagrant/.aws
-    ln -s /vagrant/conf/dot.aws/config.private /home/vagrant/.aws/config
-fi
-if [ -f /vagrant/conf/dot.aws/credentials.private ]; then
-    mkdir -p /home/vagrant/.aws
-    ln -s /vagrant/conf/dot.aws/credentials.private /home/vagrant/.aws/credentials
+# Install Terraform from Hashicorp
+if ! which terraform; then
+    VERSION=0.6.15
+    DIR=/usr/local/terraform/bin
+    mkdir -p $DIR
+    pushd $DIR
+    wget https://releases.hashicorp.com/terraform/${VERSION}/terraform_${VERSION}_linux_amd64.zip
+    unzip terraform_${VERSION}_linux_amd64.zip
+    rm terraform_${VERSION}_linux_amd64.zip
+    popd
 fi
 
 #####################################################################
@@ -255,21 +284,6 @@ fi
 if [ -f /vagrant/conf/.bash_aliases ]; then
     ln -s /vagrant/conf/dot.bash_aliases /home/vagrant/.bash_aliases
 fi
-
-# link .dot files over
-rm -f /home/vagrant/.emacs
-ln -s /vagrant/conf/dot.emacs /home/vagrant/.emacs
-rm -f /home/vagrant/.screenrc
-ln -s /vagrant/conf/dot.screenrc /home/vagrant/.screenrc
-rm -f /home/vagrant/.bash_aliases
-ln -s /vagrant/conf/dot.bash_aliases /home/vagrant/.bash_aliases
-
-rm -f /root/.emacs
-ln -s /vagrant/conf/dot.emacs /root/.emacs
-rm -f /root/.screenrc
-ln -s /vagrant/conf/dot.screenrc /root/.screenrc
-rm -f /root/.bash_aliases
-ln -s /vagrant/conf/dot.bash_aliases /root/.bash_aliases
 
 # Setup Optional Rackspace CLI Configuration
 rm -f /home/vagrant/.supernova
