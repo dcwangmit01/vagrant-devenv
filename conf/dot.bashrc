@@ -3,10 +3,8 @@
 # for golang
 export PATH=$PATH:./bin:/usr/local/go/bin
 
-# for autoenv (used to setup golang GOPATH if a .env file is found)
-source `which activate.sh`
+# for terraform
+export PATH=$PATH:/usr/local/terraform/bin
 
-# source a bash aliases file if it exists
-if [ -f ~/.bash_aliases ] ; then
-   source ~/.bash_aliases
-fi
+# Install direnv (used to setup golang GOPATH if a .envrc file is found)
+eval "$(direnv hook bash)"
