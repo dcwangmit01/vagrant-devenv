@@ -57,6 +57,8 @@ if [ -f /home/vagrant/.bashrc ] ; then
     sed -n '/## Custom:/q;p' -i /home/vagrant/.bashrc
     # Appends custom bashrc
     cat /vagrant/conf/dot.bashrc >> /home/vagrant/.bashrc
+    # Running this script as root, so must use user's point of view
+    source /home/vagrant/.bashrc
 fi
 
 # Copy Optional SSH Configuration
@@ -147,7 +149,7 @@ if [ ! -f /home/vagrant/google-cloud-sdk/bin/gcloud ] ; then
 fi
 
 # Install golang into /usr/local/go/bin (requires .bashrc to set path)
-if ! which go; then
+if [ ! -f /usr/local/go/bin/go ]; then
     PACKAGE=go1.6.linux-amd64.tar.gz
     pushd .
     curl -s https://storage.googleapis.com/golang/$PACKAGE | tar -xz -C /usr/local
@@ -217,14 +219,15 @@ if ! which gits; then
 fi
 
 # Install Terraform from Hashicorp
-if ! which terraform; then
+if [ ! -f /usr/local/terraform/bin/terraform ]; then
     VERSION=0.6.15
     DIR=/usr/local/terraform/bin
     mkdir -p $DIR
     pushd $DIR
-    wget https://releases.hashicorp.com/terraform/${VERSION}/terraform_${VERSION}_linux_amd64.zip
+    if [ ! -f terraform_${VERSION}_linux_amd64.zip ]; then
+	curl -s https://releases.hashicorp.com/terraform/${VERSION}/terraform_${VERSION}_linux_amd64.zip > terraform_${VERSION}_linux_amd64.zip
+    fi
     unzip terraform_${VERSION}_linux_amd64.zip
-    rm terraform_${VERSION}_linux_amd64.zip
     popd
 fi
 
@@ -245,7 +248,7 @@ chown -R vagrant:vagrant /home/vagrant
 # Additionally, a whole bunch of things I may want to delete
 
 # install rack (command line client for managing rackspace cloud resources)
-if ! which rack; then
+if [ ! -f /usr/local/bin/rack ]; then
     mkdir -p /usr/local/bin
     wget --quiet https://ec4a542dbf90c03b9f75-b342aba65414ad802720b41e8159cf45.ssl.cf5.rackcdn.com/1.0.1/Linux/amd64/rack \
 	 -O /usr/local/bin/rack
