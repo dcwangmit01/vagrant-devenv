@@ -61,17 +61,34 @@ if [ -f /home/vagrant/.bashrc ] ; then
     source /home/vagrant/.bashrc
 fi
 
-# Copy Optional SSH Configuration
-#   This may not be necessary if you use ssh-agent
+# Copy or Link Optional SSH Configuration
 FROM_DIR=/vagrant/conf/dot.ssh.private
 TO_DIR=/home/vagrant/.ssh
-if [ -f "${FROM_DIR}/id_rsa" ]; then
-  cp ${FROM_DIR}/id_rsa ${TO_DIR}/id_rsa
-  chmod 600 ${TO_DIR}/id_rsa
-  cat ${FROM_DIR}/id_rsa.pub >> ${TO_DIR}/authorized_keys
-  cp ${FROM_DIR}/id_rsa.pub ${TO_DIR}/id_rsa.pub
-  chown -R vagrant:vagrant ${TO_DIR}
-  chmod -R 700 ${TO_DIR}
+if [ -d "${FROM_DIR}" ]; then
+    if [ -f "${FROM_DIR}/id_rsa.pub" ]; then
+	rm -f ${TO_DIR}/id_rsa.pub
+	ln -s ${FROM_DIR}/id_rsa.pub ${TO_DIR}/id_rsa.pub
+	if ! grep "`cat ${FROM_DIR}/id_rsa.pub`" ${TO_DIR}/authorized_keys; then
+	    cat ${FROM_DIR}/id_rsa.pub >> ${TO_DIR}/authorized_keys
+	fi
+    fi
+    if [ -f "${FROM_DIR}/config" ]; then
+	rm -f ${TO_DIR}/config
+	ln -s ${FROM_DIR}/config ${TO_DIR}/config
+    fi
+    if [ -f "${FROM_DIR}/known_hosts" ]; then
+	rm -f ${TO_DIR}/known_hosts
+	ln -s ${FROM_DIR}/known_hosts ${TO_DIR}/known_hosts
+    fi
+    chown -R vagrant:vagrant ${TO_DIR}
+    chmod -R 700 ${TO_DIR}
+
+#    Staging the private key should not be necessary if using ssh-agent
+#    if [ -f "${FROM_DIR}/id_rsa" ]; then
+#	rm -f ${TO_DIR}/id_rsa
+#	ln -s ${FROM_DIR}/id_rsa ${TO_DIR}/id_rsa
+#	chmod 600 ${TO_DIR}/id_rsa
+#    fi
 fi
 
 # Setup Optional AWS CLI Configuration
