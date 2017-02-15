@@ -83,6 +83,7 @@ Vagrant.configure(2) do |config|
     # end
     # custom: above does not work for symlinks
     dev.vm.synced_folder "~/Dev", "/home/vagrant/Dev"
+    dev.vm.synced_folder "~/Entry", "/home/vagrant/Entry"
 
     dev.vm.provider "virtualbox" do |vb, override|
       override.vm.box = "bento/ubuntu-16.04"

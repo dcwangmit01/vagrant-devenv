@@ -179,17 +179,6 @@ if ! which secure; then
     curl -s https://raw.githubusercontent.com/dcwangmit01/secure/master/install.sh | bash
 fi
 
-# Install a more recent version of screen that supports vertical split
-if ! screen -v | grep "4.02"; then
-    TMP=/tmp/screen-install
-    mkdir -p $TMP
-    pushd $TMP
-    wget http://mirrors.kernel.org/ubuntu/pool/main/s/screen/screen_4.2.1-2~ubuntu14.04.1_amd64.deb
-    dpkg -i *.deb
-    rm -rf $TMP
-    popd
-fi
-
 # Install github "hub" command
 #if ! which hub; then
 #    go get -u github.com/github/hub
