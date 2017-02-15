@@ -1,6 +1,0 @@
-[user]
-	email = you@domain.com
-	name = First M Last
-[alias]
-	lga = log --graph --oneline --all --decorate
-	lg = log --graph --all --pretty=format:'%C(bold)%h%Creset -%C(auto)%d%Creset %s %C(green dim)(%cr)%Creset %C(ul)<%an>'

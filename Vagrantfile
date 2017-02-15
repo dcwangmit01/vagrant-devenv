@@ -12,7 +12,7 @@ Vagrant.configure(2) do |config|
 
   # Every Vagrant development environment requires a box. You can search for
   # boxes at https://atlas.hashicorp.com/search.
-  config.vm.box = "ubuntu/trusty64"
+  # config.vm.box = "ubuntu/trusty64"
 
   # Disable automatic box update checking. If you disable this, then
   # boxes will only be checked for updates when the user runs
@@ -72,6 +72,10 @@ Vagrant.configure(2) do |config|
   #####################################################################
   # Custom Configuration
 
+  # Enable ssh forwarding for ssh-agent
+  config.ssh.forward_x11 = true
+  config.ssh.forward_agent = true
+
   config.vm.define "dev" do |dev|
 
     # if File.directory?("~/Dev")
@@ -80,7 +84,9 @@ Vagrant.configure(2) do |config|
     # custom: above does not work for symlinks
     dev.vm.synced_folder "~/Dev", "/home/vagrant/Dev"
 
-    dev.vm.provider "virtualbox" do |vb|
+    dev.vm.provider "virtualbox" do |vb, override|
+      override.vm.box = "bento/ubuntu-16.04"
+      #override.vm.box_version = "2.2.9"
       vb.gui = false
       vb.memory = "2048"
     end
@@ -89,19 +95,23 @@ Vagrant.configure(2) do |config|
                         run: "always",
                         inline: <<-SHELL
       pushd /vagrant/conf
-      chmod 755 setup.sh && ./setup.sh
+      set -euo pipefail
+      chmod 755 setup.sh && ./setup.sh 2>&1 | tee /tmp/install.log
       popd
     SHELL
 
-    dev.ssh.forward_x11 = true
-
-    # Install the caching plugin if you want to take advantage of the cache
+    # Install the caching plugin if you want to take advantage of the
+    # cache
     # $ vagrant plugin install vagrant-cachier
     if Vagrant.has_plugin?("vagrant-cachier")
-      # Configure cached packages to be shared between instances of the same base box.
-      # More info on http://fgrehm.viewdocs.io/vagrant-cachier/usage
+      # Configure cached packages to be shared between instances of
+      # the same base box.  More info on
+      # http://fgrehm.viewdocs.io/vagrant-cachier/usage
       config.cache.scope = :machine
+    else
+      puts "[-] WARN: Subsequent provisions will be much faster"
+      puts "    if you install vagrant-cachier:"
+      puts "  vagrant plugin install vagrant-cachier"
     end
   end
-
 end
