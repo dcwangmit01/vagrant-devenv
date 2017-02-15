@@ -8,6 +8,9 @@ if [ "$EUID" -ne 0 ]; then
     exit
 fi
 
+CACHE_DIR=/vagrant/.cache
+mkdir -p $CACHE_DIR
+
 #####################################################################
 # Setup Apt
 
@@ -19,13 +22,11 @@ if [ ! -f /etc/apt/sources.list.orig ]; then
     # set apt mirror at top of sources.list for faster downloads
     mv /etc/apt/sources.list /etc/apt/sources.list.orig
     cat <<'EOF' | sudo tee /etc/apt/sources.list
-
 # Setting Mirrors
 deb mirror://mirrors.ubuntu.com/mirrors.txt xenial main restricted universe multiverse
 deb mirror://mirrors.ubuntu.com/mirrors.txt xenial-updates main restricted universe multiverse
 deb mirror://mirrors.ubuntu.com/mirrors.txt xenial-backports main restricted universe multiverse
 deb mirror://mirrors.ubuntu.com/mirrors.txt xenial-security main restricted universe multiverse
-
 EOF
     cat /etc/apt/sources.list.orig >> /etc/apt/sources.list
 
@@ -34,39 +35,6 @@ EOF
 fi
 
 #####################################################################
-# Setup Operating System and base utils from apt
-
-# Upgrade OS
-apt-get update
-apt-get -y autoremove
-#apt-get -y upgrade
-
-# Add common Utils
-# 
-# moreutils: for sponge
-# apache2-utils: for htpasswd
-apt-get -yq install mysql-client unzip dc gnupg moreutils \
-	git bridge-utils traceroute nmap dhcpdump wget curl siege whois \
-	emacs24-nox screen tree git \
-	apache2-utils \
-	python-pip python-dev
-
-#####################################################################
-# Configuration
-#   Do this before tool installation to ensure symlinks can be created
-#   before written to)
-
-# Setup the .bashrc by appending the custom one
-if [ -f /home/vagrant/.bashrc ] ; then
-    # Truncates the Custom part of the config and below
-    sed -n '/## Custom:/q;p' -i /home/vagrant/.bashrc
-    # Appends custom bashrc
-    cat /vagrant/custom/dot.bashrc >> /home/vagrant/.bashrc
-fi
-
-# Running this script as root, so must use user's point of view
-source /home/vagrant/.bashrc
-
 # Persist the configuration directories for several tools
 declare -A from_to_dirs
 from_to_dirs=( \
@@ -92,6 +60,7 @@ done
 # Persist the configuration files for several tools
 declare -A from_to_files
 from_to_files=( \
+    ["/vagrant/custom/01aptproxy"]="/etc/apt/apt.conf.d/01aptproxy" \
     ["/vagrant/custom/dot.gitconfig"]="/home/vagrant/.gitconfig" \
     ["/vagrant/custom/dot.emacs"]="/home/vagrant/.emacs" \
     ["/vagrant/custom/dot.vimrc"]="/home/vagrant/.vimrc" \
@@ -110,6 +79,40 @@ for from_file in "${!from_to_files[@]}"; do
         ln -s $from_file $to_file
     fi
 done
+
+#####################################################################
+# Setup Operating System and base utils from apt
+
+# Upgrade OS
+apt-get update
+apt-get -y autoremove
+#apt-get -y upgrade
+
+# Add common Utils
+#
+# moreutils: for sponge
+# apache2-utils: for htpasswd
+apt-get -yq install mysql-client unzip dc gnupg moreutils \
+	git bridge-utils traceroute nmap dhcpdump wget curl siege whois \
+	emacs24-nox screen tree git \
+	apache2-utils \
+	python-pip python-dev
+
+#####################################################################
+# Configuration
+#   Do this before tool installation to ensure symlinks can be created
+#   before written to)
+
+# Setup the .bashrc by appending the custom one
+if [ -f /home/vagrant/.bashrc ] ; then
+    # Truncates the Custom part of the config and below
+    sed -n '/## Custom:/q;p' -i /home/vagrant/.bashrc
+    # Appends custom bashrc
+    cat /vagrant/custom/dot.bashrc >> /home/vagrant/.bashrc
+fi
+
+# Running this script as root, so must use user's point of view
+source /home/vagrant/.bashrc
 
 #####################################################################
 # Install Miscellaneous Tools
@@ -139,7 +142,10 @@ fi
 # Install golang into /usr/local/go/bin (requires .bashrc to set path)
 if [ ! -f /usr/local/go/bin/go ]; then
     PACKAGE=go1.7.5.linux-amd64.tar.gz
-    curl -s https://storage.googleapis.com/golang/$PACKAGE | tar -xz -C /usr/local
+    if [ ! -f $CACHE_DIR/$PACKAGE ]; then
+	curl -fsSL https://storage.googleapis.com/golang/$PACKAGE > $CACHE_DIR/$PACKAGE
+    fi
+    tar -xzf $CACHE_DIR/$PACKAGE -C /usr/local
 fi
 
 # install aws command line interface: https://aws.amazon.com/cli/
@@ -149,13 +155,11 @@ fi
 
 # Install direnv
 if ! which direnv; then
-    TMP=/tmp/direnv-install
-    mkdir -p $TMP
-    pushd $TMP
-    wget http://mirrors.kernel.org/ubuntu/pool/universe/d/direnv/direnv_2.7.0-1_amd64.deb
-    dpkg -i *.deb
-    rm -rf $TMP
-    popd
+    PACKAGE=direnv_2.7.0-1_amd64.deb
+    if [ ! -f $CACHE_DIR/$PACKAGE ]; then
+	curl -fsSL http://mirrors.kernel.org/ubuntu/pool/universe/d/direnv/$PACKAGE > $CACHE_DIR/$PACKAGE
+    fi
+    dpkg -i $CACHE_DIR/$PACKAGE
 fi
 
 # Install python virtualenv, also upgrade pip
@@ -202,7 +206,7 @@ fi
 # # Install Terraform from Hashicorp
 # if [ ! -f /usr/local/terraform/bin/terraform ]; then
 #   VERSION=0.7.3
-#   CACHE_DIR=/$vagrant/.cache
+#   CACHE_DIR=/vagrant/.cache
 #   DIR=/usr/local/terraform/bin
 #   mkdir -p $CACHE_DIR
 #   mkdir -p $DIR
