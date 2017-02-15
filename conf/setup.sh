@@ -14,25 +14,27 @@ mkdir -p $CACHE_DIR
 #####################################################################
 # Setup Apt
 
-if [ ! -f /etc/apt/sources.list.orig ]; then
-    # turn off extraneous package management stuff
-    ex +"%s@DPkg@//DPkg" -cwq /etc/apt/apt.conf.d/70debconf
-    dpkg-reconfigure debconf -f noninteractive -p critical
+# if [ ! -f /etc/apt/sources.list.orig ]; then
+#     # turn off extraneous package management stuff
+#     ex +"%s@DPkg@//DPkg" -cwq /etc/apt/apt.conf.d/70debconf
+#     dpkg-reconfigure debconf -f noninteractive -p critical
 
-    # set apt mirror at top of sources.list for faster downloads
-    mv /etc/apt/sources.list /etc/apt/sources.list.orig
-    cat <<'EOF' | sudo tee /etc/apt/sources.list
-# Setting Mirrors
-deb mirror://mirrors.ubuntu.com/mirrors.txt xenial main restricted universe multiverse
-deb mirror://mirrors.ubuntu.com/mirrors.txt xenial-updates main restricted universe multiverse
-deb mirror://mirrors.ubuntu.com/mirrors.txt xenial-backports main restricted universe multiverse
-deb mirror://mirrors.ubuntu.com/mirrors.txt xenial-security main restricted universe multiverse
-EOF
-    cat /etc/apt/sources.list.orig >> /etc/apt/sources.list
+#     # set apt mirror at top of sources.list for faster downloads
+#     mv /etc/apt/sources.list /etc/apt/sources.list.orig
+#     cat <<'EOF' | sudo tee /etc/apt/sources.list
 
-    # workaround bug: https://bugs.launchpad.net/ubuntu/+source/apt/+bug/1479045
-    rm -f /var/lib/apt/lists/partial/*
-fi
+# # Setting Mirrors
+# deb mirror://mirrors.ubuntu.com/mirrors.txt xenial main restricted universe multiverse
+# deb mirror://mirrors.ubuntu.com/mirrors.txt xenial-updates main restricted universe multiverse
+# deb mirror://mirrors.ubuntu.com/mirrors.txt xenial-backports main restricted universe multiverse
+# deb mirror://mirrors.ubuntu.com/mirrors.txt xenial-security main restricted universe multiverse
+
+# EOF
+#     cat /etc/apt/sources.list.orig >> /etc/apt/sources.list
+
+#     # workaround bug: https://bugs.launchpad.net/ubuntu/+source/apt/+bug/1479045
+#     rm -f /var/lib/apt/lists/partial/*#
+# fi
 
 #####################################################################
 # Persist the configuration directories for several tools
@@ -60,7 +62,7 @@ done
 # Persist the configuration files for several tools
 declare -A from_to_files
 from_to_files=( \
-    ["/vagrant/custom/01aptproxy"]="/etc/apt/apt.conf.d/01aptproxy" \
+    ["/vagrant/custom/00aptproxy"]="/etc/apt/apt.conf.d/00aptproxy" \
     ["/vagrant/custom/dot.gitconfig"]="/home/vagrant/.gitconfig" \
     ["/vagrant/custom/dot.emacs"]="/home/vagrant/.emacs" \
     ["/vagrant/custom/dot.vimrc"]="/home/vagrant/.vimrc" \
@@ -193,14 +195,14 @@ if ! which gits; then
     # Use a forked version of gitslave because it hasn't been updated
     # in a long time, and commands like "gits status" no longer work
     # with more recent versions of git.
-    TMP=/tmp/gitslave-install
-    mkdir -p $TMP
-    pushd $TMP
-    git clone https://github.com/joelpurra/gitslave.git
-    cd gitslave
+    if [ ! -d $CACHE_DIR/gitslave ]; then
+      pushd $CACHE_DIR
+      git clone https://github.com/joelpurra/gitslave.git
+      popd
+    fi
+    pushd $CACHE_DIR/gitslave
     make install
     popd
-    rm -rf $TMP
 fi
 
 # # Install Terraform from Hashicorp
