@@ -1,5 +1,8 @@
 ## Custom: Everything below this line is auto-edited by vagrant setup.sh scripts
 
+# emacs
+export EDITOR=emacs
+
 # for golang
 export GOPATH=/home/vagrant/go
 export PATH=$PATH:./bin:/usr/local/go/bin

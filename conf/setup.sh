@@ -12,31 +12,6 @@ CACHE_DIR=/vagrant/.cache
 mkdir -p $CACHE_DIR
 
 #####################################################################
-# Setup Apt
-
-# if [ ! -f /etc/apt/sources.list.orig ]; then
-#     # turn off extraneous package management stuff
-#     ex +"%s@DPkg@//DPkg" -cwq /etc/apt/apt.conf.d/70debconf
-#     dpkg-reconfigure debconf -f noninteractive -p critical
-
-#     # set apt mirror at top of sources.list for faster downloads
-#     mv /etc/apt/sources.list /etc/apt/sources.list.orig
-#     cat <<'EOF' | sudo tee /etc/apt/sources.list
-
-# # Setting Mirrors
-# deb mirror://mirrors.ubuntu.com/mirrors.txt xenial main restricted universe multiverse
-# deb mirror://mirrors.ubuntu.com/mirrors.txt xenial-updates main restricted universe multiverse
-# deb mirror://mirrors.ubuntu.com/mirrors.txt xenial-backports main restricted universe multiverse
-# deb mirror://mirrors.ubuntu.com/mirrors.txt xenial-security main restricted universe multiverse
-
-# EOF
-#     cat /etc/apt/sources.list.orig >> /etc/apt/sources.list
-
-#     # workaround bug: https://bugs.launchpad.net/ubuntu/+source/apt/+bug/1479045
-#     rm -f /var/lib/apt/lists/partial/*#
-# fi
-
-#####################################################################
 # Persist the configuration directories for several tools
 declare -A from_to_dirs
 from_to_dirs=( \
@@ -88,17 +63,18 @@ done
 # Upgrade OS
 apt-get update
 apt-get -y autoremove
-#apt-get -y upgrade
 
 # Add common Utils
 #
 # moreutils: for sponge
 # apache2-utils: for htpasswd
+# xauth: to forward X11 programs to the host machine
 apt-get -yq install mysql-client unzip dc gnupg moreutils \
-	git bridge-utils traceroute nmap dhcpdump wget curl siege whois \
-	emacs24-nox screen tree git \
-	apache2-utils \
-	python-pip python-dev
+    git bridge-utils traceroute nmap dhcpdump wget curl siege whois \
+    emacs24-nox screen tree git \
+    apache2-utils \
+    python-pip python-dev \
+    xauth
 
 #####################################################################
 # Configuration
@@ -121,7 +97,7 @@ source /home/vagrant/.bashrc
 
 # Install docker
 if ! which docker; then
-    curl -s https://get.docker.com/ | sh
+    curl -fsSL https://get.docker.com/ | sh
     usermod -aG docker root
     usermod -aG docker vagrant
 fi
@@ -145,7 +121,7 @@ fi
 if [ ! -f /usr/local/go/bin/go ]; then
     PACKAGE=go1.7.5.linux-amd64.tar.gz
     if [ ! -f $CACHE_DIR/$PACKAGE ]; then
-	curl -fsSL https://storage.googleapis.com/golang/$PACKAGE > $CACHE_DIR/$PACKAGE
+        curl -fsSL https://storage.googleapis.com/golang/$PACKAGE > $CACHE_DIR/$PACKAGE
     fi
     tar -xzf $CACHE_DIR/$PACKAGE -C /usr/local
 fi
@@ -159,7 +135,7 @@ fi
 if ! which direnv; then
     PACKAGE=direnv_2.7.0-1_amd64.deb
     if [ ! -f $CACHE_DIR/$PACKAGE ]; then
-	curl -fsSL http://mirrors.kernel.org/ubuntu/pool/universe/d/direnv/$PACKAGE > $CACHE_DIR/$PACKAGE
+        curl -fsSL http://mirrors.kernel.org/ubuntu/pool/universe/d/direnv/$PACKAGE > $CACHE_DIR/$PACKAGE
     fi
     dpkg -i $CACHE_DIR/$PACKAGE
 fi
@@ -177,12 +153,12 @@ fi
 
 # install yq: a yaml cli editor
 if ! which yq; then
-    curl -s https://raw.githubusercontent.com/dcwangmit01/yq/master/install.sh | bash
+    curl -fsSL https://raw.githubusercontent.com/dcwangmit01/yq/master/install.sh | bash
 fi
 
 # install secure: a gpg multiparty encryption wrapper
 if ! which secure; then
-    curl -s https://raw.githubusercontent.com/dcwangmit01/secure/master/install.sh | bash
+    curl -fsSL https://raw.githubusercontent.com/dcwangmit01/secure/master/install.sh | bash
 fi
 
 # Install github "hub" command
@@ -205,6 +181,38 @@ if ! which gits; then
     popd
 fi
 
+# install npm and nodejs
+if ! which npm; then
+    apt-get -yq install nodejs npm
+    ln -s /usr/bin/nodejs /usr/bin/node
+fi
+
+# install github/electron
+if ! which electron; then
+    apt-get -yq install libgtk2.0-0 libxtst6 libxss1 libgconf-2-4 libnss3
+
+    PACKAGE=electron-v1.4.15-linux-x64.zip
+    URL=https://github.com/electron/electron/releases/download/v1.4.15/electron-v1.4.15-linux-x64.zip
+    if [ ! -f $CACHE_DIR/$PACKAGE ]; then
+        curl -fsSL $URL > $CACHE_DIR/$PACKAGE
+    fi
+    unzip -d /usr/local/electron-v1.4.15 $CACHE_DIR/$PACKAGE
+    ln -s /usr/local/electron-v1.4.15/electron /usr/local/bin/electron
+fi
+
+#####################################################################
+# Cleanup
+
+# Ensure user ownership
+if [ ! -f /home/vagrant/.setup/chowned ] ; then
+    chown -R vagrant:vagrant /home/vagrant
+    mkdir -p /home/vagrant/.setup
+    touch /home/vagrant/.setup/chowned
+fi
+
+#####################################################################
+# Additionally, a whole bunch of things I may want to delete
+
 # # Install Terraform from Hashicorp
 # if [ ! -f /usr/local/terraform/bin/terraform ]; then
 #   VERSION=0.7.3
@@ -223,20 +231,5 @@ fi
 #       unzip terraform_${VERSION}_linux_amd64.zip
 #     popd
 #   popd
-# fi
-
-#####################################################################
-# Cleanup
-
-# Ensure user ownership
-chown -R vagrant:vagrant /home/vagrant
-
-#####################################################################
-# Additionally, a whole bunch of things I may want to delete
-
-# # install nodejs and npm
-# if ! which nodejs; then
-#     apt-get -y install nodejs npm
-#     ln -s /usr/bin/nodejs /usr/bin/node
 # fi
 
