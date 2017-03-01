@@ -1,21 +1,31 @@
 ## Custom: Everything below this line is auto-edited by vagrant setup.sh scripts
 
+silent() {
+    "$@" 2>&1 > /dev/null
+}
+
 # emacs
 export EDITOR=emacs
 
 # for golang
-export GOPATH=/home/vagrant/go
-export PATH=$PATH:./bin:/usr/local/go/bin
+export GOPATH=/go
+export PATH=$PATH:./bin:/usr/local/go/bin:$GOPATH/bin
 
 # for terraform
 export PATH=$PATH:/usr/local/terraform/bin
 
-# Install direnv (used to setup golang GOPATH if a .envrc file is found)
-eval "$(direnv hook bash)"
-
 # for gcloud, kubectl
 export PATH=$PATH:/usr/local/google-cloud-sdk/bin
 
+# Install direnv (used to setup golang GOPATH if a .envrc file is found)
+if silent which direnv; then
+   eval "$(direnv hook bash)"
+fi
+
+# enable hub alias to git if hub is installed
+if silent which hub; then
+   eval "$(hub alias -s)"
+fi
 
 #####################################################################
 # Enable re-attaching screen sessions with ssh-agent support

@@ -138,10 +138,19 @@ if [ ! -f /usr/local/go/bin/go ]; then
     tar -xzf $CACHE_DIR/$PACKAGE -C /usr/local
 fi
 
-# install aws command line interface: https://aws.amazon.com/cli/
-#if ! which aws; then
-#    pip install awscli
-#fi
+# Setup the system GOPATH directory
+if [ ! -d /go ]; then
+    mkdir /go
+    # ensure admin group (which includes vagrant user) has access
+    chown root:adm /go
+    # ensure future files created inherit group permissions
+    find /go -type d -print0 | xargs -0 chmod g+rws
+fi
+
+# Install github "hub" command
+if ! which hub; then
+    go get -u github.com/github/hub
+fi
 
 # Install direnv
 if ! which direnv; then
@@ -172,11 +181,6 @@ fi
 if ! which secure; then
     curl -fsSL https://raw.githubusercontent.com/dcwangmit01/secure/master/install.sh | bash
 fi
-
-# Install github "hub" command
-#if ! which hub; then
-#    go get -u github.com/github/hub
-#fi
 
 # Install gitslave
 if ! which gits; then
@@ -245,4 +249,9 @@ fi
 #     popd
 #   popd
 # fi
+
+# install aws command line interface: https://aws.amazon.com/cli/
+#if ! which aws; then
+#    pip install awscli
+#fi
 
