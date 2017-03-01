@@ -74,20 +74,32 @@ apt-get -yq install mysql-client unzip dc gnupg moreutils \
     emacs24-nox screen tree git \
     apache2-utils \
     python-pip python-dev \
-    xauth
+    xauth qemu-user-static
 
 #####################################################################
 # Configuration
 #   Do this before tool installation to ensure symlinks can be created
 #   before written to)
 
-# Setup the .bashrc by appending the custom one
-if [ -f /home/vagrant/.bashrc ] ; then
-    # Truncates the Custom part of the config and below
-    sed -n '/## Custom:/q;p' -i /home/vagrant/.bashrc
-    # Appends custom bashrc
-    cat /vagrant/custom/dot.bashrc >> /home/vagrant/.bashrc
-fi
+
+declare -A owner_to_home
+owner_to_home=( \
+    ["root"]="/root" \
+    ["vagrant"]="/home/vagrant" )
+for owner in "${!owner_to_home[@]}"; do
+    home=${owner_to_home[$owner]}
+    bashrc=$home/.bashrc
+
+    # Setup the .bashrc by appending the custom one
+    if [ -f $bashrc ] ; then
+	# Truncates the Custom part of the config and below
+	sed -n '/## Custom:/q;p' -i $bashrc
+	# Appends custom bashrc
+	cat /vagrant/custom/dot.bashrc >> $bashrc
+	# ensure ownership
+	chown $owner:$owner $bashrc
+    fi
+done
 
 # Running this script as root, so must use user's point of view
 source /home/vagrant/.bashrc
@@ -199,6 +211,7 @@ if ! which electron; then
     unzip -d /usr/local/electron-v1.4.15 $CACHE_DIR/$PACKAGE
     ln -s /usr/local/electron-v1.4.15/electron /usr/local/bin/electron
 fi
+
 
 #####################################################################
 # Cleanup

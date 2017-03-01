@@ -1,3 +1,5 @@
+;disable auto indenting on paste
+(electric-indent-mode -1)
 ;disable backup
 (setq backup-inhibited t)
 ;disable auto save
