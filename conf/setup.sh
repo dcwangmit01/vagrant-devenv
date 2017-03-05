@@ -39,6 +39,7 @@ declare -A from_to_files
 from_to_files=( \
     ["/vagrant/custom/00aptproxy"]="/etc/apt/apt.conf.d/00aptproxy" \
     ["/vagrant/custom/dot.gitconfig"]="/home/vagrant/.gitconfig" \
+    ["/vagrant/custom/dot.hub"]="/home/vagrant/.config/hub" \
     ["/vagrant/custom/dot.emacs"]="/home/vagrant/.emacs" \
     ["/vagrant/custom/dot.vimrc"]="/home/vagrant/.vimrc" \
     ["/vagrant/custom/dot.screenrc"]="/home/vagrant/.screenrc" )
