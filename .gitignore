@@ -9,4 +9,12 @@
 *~
 .vagrant
 .cache
+
+# Exclude secret custom configs
+custom/dot.emacs.d/
+custom/dot.gcloud/
+custom/dot.gnupg/
+custom/dot.hub
+custom/dot.ssh/
+custom/dot.vimrc
 #######################################
