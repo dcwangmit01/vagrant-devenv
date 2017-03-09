@@ -132,7 +132,7 @@ fi
 
 # Install golang into /usr/local/go/bin (requires .bashrc to set path)
 if [ ! -f /usr/local/go/bin/go ]; then
-    PACKAGE=go1.7.5.linux-amd64.tar.gz
+    PACKAGE=go1.8.linux-amd64.tar.gz
     if [ ! -f $CACHE_DIR/$PACKAGE ]; then
         curl -fsSL https://storage.googleapis.com/golang/$PACKAGE > $CACHE_DIR/$PACKAGE
     fi
@@ -146,6 +146,12 @@ if [ ! -d /go ]; then
     chown root:adm /go
     # ensure future files created inherit group permissions
     find /go -type d -print0 | xargs -0 chmod g+rws
+fi
+
+# Install golang glide dependency manager
+if ! which glide; then
+    add-apt-repository ppa:masterminds/glide && sudo apt-get update
+    apt-get install glide
 fi
 
 # Install github "hub" command
