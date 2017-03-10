@@ -9,7 +9,7 @@ export EDITOR=emacs
 
 # for golang
 export GOPATH=/go
-export PATH=$PATH:./bin:/usr/local/go/bin:$GOPATH/bin
+export PATH=./bin:./vendor/bin:$GOPATH/bin:/usr/local/go/bin:$PATH
 
 # for terraform
 export PATH=$PATH:/usr/local/terraform/bin
