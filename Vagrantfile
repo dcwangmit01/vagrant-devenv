@@ -77,6 +77,7 @@ Vagrant.configure(2) do |config|
   config.ssh.forward_agent = true
 
   config.vm.define "dev" do |dev|
+    dev.vm.hostname = "devenv"
 
     # if File.directory?("~/Dev")
     #   dev.vm.synced_folder "~/Dev", "/vagrant/Dev"
