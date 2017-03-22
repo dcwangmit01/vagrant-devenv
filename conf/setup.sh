@@ -102,8 +102,8 @@ for owner in "${!owner_to_home[@]}"; do
     fi
 done
 
-# Running this script as root, so must use user's point of view
-source /home/vagrant/.bashrc
+# Use user's point of view
+source /vagrant/custom/dot.bashrc
 
 #####################################################################
 # Install Miscellaneous Tools
@@ -157,6 +157,19 @@ fi
 # Install github "hub" command
 if ! which hub; then
     go get -u github.com/github/hub
+fi
+
+# Install protocol buffers (requires .bashrc to set path)
+if [ ! -f /usr/local/protoc/bin/protoc ]; then
+    VERSION=3.2.0
+    PACKAGE=protoc-$VERSION-linux-x86_64.zip
+    if [ ! -f $CACHE_DIR/$PACKAGE ]; then
+	curl -fsSL https://github.com/google/protobuf/releases/download/v$VERSION/$PACKAGE \
+	     > $CACHE_DIR/$PACKAGE
+    fi
+    mkdir -p /usr/local/protoc
+    chown root:adm /usr/local/protoc; chmod g+rws /usr/local/protoc
+    unzip $CACHE_DIR/$PACKAGE -d /usr/local/protoc
 fi
 
 # Install direnv
