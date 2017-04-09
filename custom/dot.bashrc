@@ -9,7 +9,7 @@ export EDITOR=emacs
 
 # for golang
 export GOPATH=/go
-export PATH=./bin:./vendor/bin:$GOPATH/bin:/usr/local/go/bin:$PATH
+export PATH=./bin:./bin/linux_amd64/:./vendor/bin:$GOPATH/bin:/usr/local/go/bin:$PATH
 
 # for protocol buffers
 export PATH=$PATH:/usr/local/protoc/bin
@@ -20,21 +20,23 @@ export PATH=$PATH:/usr/local/terraform/bin
 # for gcloud, kubectl
 export PATH=$PATH:/usr/local/google-cloud-sdk/bin
 
-# Install direnv (used to setup golang GOPATH if a .envrc file is found)
-if silent which direnv; then
-   eval "$(direnv hook bash)"
+# for direnv; only if interactive shell and direnv is installed
+if [[ -n ${PS1:-''} ]] && silent which direnv; then
+    eval "$(direnv hook bash)"
 fi
 
-# enable hub alias to git if hub is installed
-if silent which hub; then
-   eval "$(hub alias -s)"
+# for hub alias; only if interactive shell and hub is installed
+if [[ -n ${PS1:-''} ]] && silent which hub; then
+    eval "$(hub alias -s)"
 fi
 
 #####################################################################
 # Enable re-attaching screen sessions with ssh-agent support
-#   Only for interactive sessions
-if tty -s; then
-    if [[ -n "${SSH_TTY:-''}" && -S "$SSH_AUTH_SOCK" && ! -L "$SSH_AUTH_SOCK" ]]; then
+#   If this is an interactive session that is also an ssh session
+if [[ -n ${PS1:-''} && -n ${SSH_TTY:-''} ]] ; then
+    # if there is an SSH_AUTH_SOCK set, and it is a socket, and it is not a link
+    if [[ -n ${SSH_AUTH_SOCK:-''} && -S "$SSH_AUTH_SOCK" && ! -L "$SSH_AUTH_SOCK" ]]; then
+        # then create the link
         rm -f ~/.ssh/ssh_auth_sock
         ln -sf $SSH_AUTH_SOCK ~/.ssh/ssh_auth_sock
         export SSH_AUTH_SOCK=~/.ssh/ssh_auth_sock

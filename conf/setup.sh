@@ -139,13 +139,13 @@ if [ ! -f /usr/local/go/bin/go ]; then
     tar -xzf $CACHE_DIR/$PACKAGE -C /usr/local
 fi
 
-# Setup the system GOPATH directory
+# Setup the system GOPATH directory, and GOROOT /usr/local/go
 if [ ! -d /go ]; then
     mkdir /go
     # ensure admin group (which includes vagrant user) has access
-    chown root:adm /go
+    chown -R root:adm /go /usr/local/go
     # ensure future files created inherit group permissions
-    find /go -type d -print0 | xargs -0 chmod g+rws
+    find /go /usr/local/go -print0 | xargs -0 chmod g+rws
 fi
 
 # Install golang glide dependency manager
