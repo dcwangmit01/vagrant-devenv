@@ -217,23 +217,18 @@ if ! which gits; then
     popd
 fi
 
-# install npm and nodejs
+# install npm and nodejs, and upgrade npm
 if ! which npm; then
     apt-get -yq install nodejs npm
     ln -s /usr/bin/nodejs /usr/bin/node
+    npm install -g npm
 fi
 
-# install github/electron
-if ! which electron; then
-    apt-get -yq install libgtk2.0-0 libxtst6 libxss1 libgconf-2-4 libnss3
-
-    PACKAGE=electron-v1.4.15-linux-x64.zip
-    URL=https://github.com/electron/electron/releases/download/v1.4.15/electron-v1.4.15-linux-x64.zip
-    if [ ! -f $CACHE_DIR/$PACKAGE ]; then
-        curl -fsSL $URL > $CACHE_DIR/$PACKAGE
-    fi
-    unzip -d /usr/local/electron-v1.4.15 $CACHE_DIR/$PACKAGE
-    ln -s /usr/local/electron-v1.4.15/electron /usr/local/bin/electron
+# install node version manager
+NVM_HOME="/home/vagrant/.nvm"
+if [ ! -d $NVM_HOME ]; then
+    curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.2/install.sh \
+      | sudo --login -u vagrant
 fi
 
 
@@ -274,4 +269,17 @@ fi
 #if ! which aws; then
 #    pip install awscli
 #fi
+
+# # install github/electron
+# if ! which electron; then
+#     apt-get -yq install libgtk2.0-0 libxtst6 libxss1 libgconf-2-4 libnss3
+#
+#     PACKAGE=electron-v1.4.15-linux-x64.zip
+#     URL=https://github.com/electron/electron/releases/download/v1.4.15/electron-v1.4.15-linux-x64.zip
+#     if [ ! -f $CACHE_DIR/$PACKAGE ]; then
+#         curl -fsSL $URL > $CACHE_DIR/$PACKAGE
+#     fi
+#     unzip -d /usr/local/electron-v1.4.15 $CACHE_DIR/$PACKAGE
+#     ln -s /usr/local/electron-v1.4.15/electron /usr/local/bin/electron
+# fi
 
