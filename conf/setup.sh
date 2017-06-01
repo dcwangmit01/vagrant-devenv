@@ -137,15 +137,7 @@ if [ ! -f /usr/local/go/bin/go ]; then
         curl -fsSL https://storage.googleapis.com/golang/$PACKAGE > $CACHE_DIR/$PACKAGE
     fi
     tar -xzf $CACHE_DIR/$PACKAGE -C /usr/local
-fi
-
-# Setup the system GOPATH directory, and GOROOT /usr/local/go
-if [ ! -d /go ]; then
-    mkdir /go
-    # ensure admin group (which includes vagrant user) has access
-    chown -R root:adm /go /usr/local/go
-    # ensure future files created inherit group permissions
-    find /go /usr/local/go -type d -print0 | xargs -0 chmod g+rws
+    mkdir -p /go
 fi
 
 # Install golang glide dependency manager
@@ -240,6 +232,14 @@ if [ ! -f /home/vagrant/.setup/chowned ] ; then
     chown -R vagrant:vagrant /home/vagrant
     mkdir -p /home/vagrant/.setup
     touch /home/vagrant/.setup/chowned
+fi
+
+# Ensure GOPATH permissions for ordinary users
+if [ -d /go ]; then
+    # ensure admin group (which includes vagrant user) has access
+    chown -R root:adm /go /usr/local/go
+    # ensure future files created inherit group permissions
+    find /go /usr/local/go -type d -print0 | xargs -0 chmod g+rws
 fi
 
 #####################################################################
