@@ -23,6 +23,10 @@ Vagrant.configure(2) do |config|
   # within the machine from a port on the host machine. In the example below,
   # accessing "localhost:8080" will access port 80 on the guest machine.
   # config.vm.network "forwarded_port", guest: 80, host: 8080
+  config.vm.network "forwarded_port", guest: 80, host: 8080
+  config.vm.network "forwarded_port", guest: 3000, host: 3000
+  config.vm.network "forwarded_port", guest: 5000, host: 5000
+  config.vm.network "forwarded_port", guest: 10080, host: 10080
 
   # Create a private network, which allows host-only access to the machine
   # using a specific IP.
@@ -71,6 +75,8 @@ Vagrant.configure(2) do |config|
 
   #####################################################################
   # Custom Configuration
+
+  # TODO: http://ermaker.github.io/blog/2015/11/18/change-insecure-key-to-my-own-key-on-vagrant.html
 
   # Enable ssh forwarding for ssh-agent
   config.ssh.forward_x11 = true

@@ -145,7 +145,7 @@ if [ ! -d /go ]; then
     # ensure admin group (which includes vagrant user) has access
     chown -R root:adm /go /usr/local/go
     # ensure future files created inherit group permissions
-    find /go /usr/local/go -print0 | xargs -0 chmod g+rws
+    find /go /usr/local/go -type d -print0 | xargs -0 chmod g+rws
 fi
 
 # Install golang glide dependency manager
@@ -192,9 +192,9 @@ if ! which j2; then
     pip install j2cli
 fi
 
-# install yq: a yaml cli editor
+# install python yq cli tool (jq for yaml)
 if ! which yq; then
-    curl -fsSL https://raw.githubusercontent.com/dcwangmit01/yq/master/install.sh | bash
+    pip install yq
 fi
 
 # install secure: a gpg multiparty encryption wrapper
