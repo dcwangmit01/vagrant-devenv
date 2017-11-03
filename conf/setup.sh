@@ -20,6 +20,7 @@ from_to_dirs=( \
     ["/vagrant/custom/dot.emacs.d"]="/home/vagrant/.emacs.d" \
     ["/vagrant/custom/dot.gnupg"]="/home/vagrant/.gnupg" \
     ["/vagrant/custom/dot.gcloud"]="/home/vagrant/.config/gcloud" \
+    ["/vagrant/custom/dot.govc"]="/home/vagrant/.govc" \
     ["/vagrant/custom/dot.kube"]="/home/vagrant/.kube" )
 for from_dir in "${!from_to_dirs[@]}"; do
     to_dir=${from_to_dirs[$from_dir]}
@@ -37,6 +38,7 @@ done
 # Persist the configuration files for several tools
 declare -A from_to_files
 from_to_files=( \
+    ["/vagrant/custom/dot.ssh/config"]="/home/vagrant/.ssh/config" \
     ["/vagrant/custom/00aptproxy"]="/etc/apt/apt.conf.d/00aptproxy" \
     ["/vagrant/custom/dot.gitconfig"]="/home/vagrant/.gitconfig" \
     ["/vagrant/custom/dot.hub"]="/home/vagrant/.config/hub" \
@@ -75,13 +77,17 @@ apt-get -yq install mysql-client unzip dc gnupg moreutils \
     emacs24-nox screen tree git \
     apache2-utils \
     python-pip python-dev \
-    xauth qemu-user-static
+    xauth qemu-user-static \
+    ansible ntp \
+    colordiff
 
 #####################################################################
 # Configuration
 #   Do this before tool installation to ensure symlinks can be created
 #   before written to)
 
+# Set ntp time
+timedatectl set-ntp true
 
 declare -A owner_to_home
 owner_to_home=( \
@@ -140,6 +146,18 @@ if [ ! -f /usr/local/go/bin/go ]; then
     mkdir -p /go
 fi
 
+# Install helm into /usr/local/bin
+if [ ! -f /usr/local/bin/helm ]; then
+    PACKAGE=helm-v2.6.1-linux-amd64.tar.gz
+    if [ ! -f $CACHE_DIR/$PACKAGE ]; then
+        curl -fsSL https://kubernetes-helm.storage.googleapis.com/$PACKAGE > $CACHE_DIR/$PACKAGE
+    fi
+    TMPDIR=$(mktemp -d)
+    tar -xzf $CACHE_DIR/$PACKAGE -C $TMPDIR
+    cp -f $TMPDIR/linux-amd64/helm /usr/local/bin/helm
+    rm -rf $TMPDIR
+fi
+
 # Install golang glide dependency manager
 if ! which glide; then
     add-apt-repository ppa:masterminds/glide && sudo apt-get update
@@ -149,6 +167,11 @@ fi
 # Install github "hub" command
 if ! which hub; then
     go get -u github.com/github/hub
+fi
+
+# Install "govc" command (vmware vcenter cli client)
+if ! which govc; then
+    go get -u github.com/vmware/govmomi/govc
 fi
 
 # Install protocol buffers (requires .bashrc to set path)
@@ -223,6 +246,36 @@ if [ ! -d $NVM_HOME ]; then
       | sudo --login -u vagrant
 fi
 
+# Install Terraform from Hashicorp
+if [ ! -f /usr/local/terraform/bin/terraform ]; then
+  VERSION=0.10.2
+  CACHE_DIR=/vagrant/.cache
+  DIR=/usr/local/terraform/bin
+  mkdir -p $CACHE_DIR
+  mkdir -p $DIR
+  pushd $CACHE_DIR
+    if [ ! -f terraform_${VERSION}_linux_amd64.zip ]; then
+      curl -fsSL \
+        https://releases.hashicorp.com/terraform/${VERSION}/terraform_${VERSION}_linux_amd64.zip \
+      > terraform_${VERSION}_linux_amd64.zip
+    fi
+    pushd $DIR
+      cp $CACHE_DIR/terraform_${VERSION}_linux_amd64.zip .
+      unzip terraform_${VERSION}_linux_amd64.zip
+    popd
+  popd
+fi
+
+# install aws command line interface: https://aws.amazon.com/cli/
+if ! which aws; then
+    pip install awscli
+fi
+
+# install aws kubernetes ops tools
+if ! which kops; then
+    curl -fsSL https://github.com/kubernetes/kops/releases/download/1.7.0/kops-linux-amd64 > /usr/local/bin/kops
+    chmod 755 /usr/local/bin/kops
+fi
 
 #####################################################################
 # Cleanup
@@ -244,31 +297,6 @@ fi
 
 #####################################################################
 # Additionally, a whole bunch of things I may want to delete
-
-# # Install Terraform from Hashicorp
-# if [ ! -f /usr/local/terraform/bin/terraform ]; then
-#   VERSION=0.7.3
-#   CACHE_DIR=/vagrant/.cache
-#   DIR=/usr/local/terraform/bin
-#   mkdir -p $CACHE_DIR
-#   mkdir -p $DIR
-#   pushd $CACHE_DIR
-#     if [ ! -f terraform_${VERSION}_linux_amd64.zip ]; then
-#       curl -fsSL \
-#         https://releases.hashicorp.com/terraform/${VERSION}/terraform_${VERSION}_linux_amd64.zip \
-#       > terraform_${VERSION}_linux_amd64.zip
-#     fi
-#     pushd $DIR
-#       cp $CACHE_DIR/terraform_${VERSION}_linux_amd64.zip .
-#       unzip terraform_${VERSION}_linux_amd64.zip
-#     popd
-#   popd
-# fi
-
-# install aws command line interface: https://aws.amazon.com/cli/
-#if ! which aws; then
-#    pip install awscli
-#fi
 
 # # install github/electron
 # if ! which electron; then

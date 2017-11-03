@@ -19,6 +19,7 @@ export PATH=$PATH:/usr/local/terraform/bin
 
 # for gcloud, kubectl
 export PATH=$PATH:/usr/local/google-cloud-sdk/bin
+export KUBECONFIG=$(find ~/.kube/config* | tr '\n' ':')
 
 # for direnv; only if interactive shell and direnv is installed
 if [[ -n ${PS1:-''} ]] && silent which direnv; then
@@ -49,4 +50,9 @@ export NVM_DIR="$HOME/.nvm"
 if [ -d $NVM_DIR ]; then
   [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
   [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+fi
+
+# for GOVC (vmware vcenter cli client)
+if [ -f ~/.govc/config ]; then
+   source ~/.govc/config
 fi
