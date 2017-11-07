@@ -21,6 +21,7 @@ from_to_dirs=( \
     ["/vagrant/custom/dot.gnupg"]="/home/vagrant/.gnupg" \
     ["/vagrant/custom/dot.gcloud"]="/home/vagrant/.config/gcloud" \
     ["/vagrant/custom/dot.govc"]="/home/vagrant/.govc" \
+    ["/vagrant/custom/dot.minikube"]="/home/vagrant/.minikube" \
     ["/vagrant/custom/dot.kube"]="/home/vagrant/.kube" )
 for from_dir in "${!from_to_dirs[@]}"; do
     to_dir=${from_to_dirs[$from_dir]}
@@ -79,7 +80,7 @@ apt-get -yq install mysql-client unzip dc gnupg moreutils \
     python-pip python-dev \
     xauth qemu-user-static \
     ansible ntp \
-    colordiff
+    colordiff socat
 
 #####################################################################
 # Configuration
@@ -116,10 +117,29 @@ source /vagrant/custom/dot.bashrc
 
 # Install docker
 if ! which docker; then
-    curl -fsSL https://get.docker.com/ | sh
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
+    add-apt-repository \
+      "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+      $(lsb_release -cs) \
+      stable"
+    apt-get update
+    apt-get -yq install docker-ce
     usermod -aG docker root
     usermod -aG docker vagrant
 fi
+
+# Install minikube
+if ! which minikube; then
+    curl -fsSL https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64 > /usr/bin/minikube
+    chmod a+x /usr/bin/minikube
+fi
+
+# Install kubectl
+if ! which kubectl; then
+    curl -fsSL https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl > /usr/bin/kubectl
+    chmod a+x /usr/bin/kubectl
+fi
+
 
 # Install docker-compose
 if ! which docker-compose; then

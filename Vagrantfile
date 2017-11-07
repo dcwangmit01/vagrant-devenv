@@ -84,37 +84,61 @@ Vagrant.configure(2) do |config|
 
   config.vm.define "dev" do |dev|
     dev.vm.hostname = "devenv"
+    $address = "192.168.3.13"
+    $gateway = "192.168.3.1"
+    $interface = "eth1"
+    $bridge = "en0: Ethernet"
+
+    dev.vm.box = "bento/ubuntu-16.04"
 
     # if File.directory?("~/Dev")
     #   dev.vm.synced_folder "~/Dev", "/vagrant/Dev"
     # end
     # custom: above does not work for symlinks
     dev.vm.synced_folder "~/Dev", "/home/vagrant/Dev"
-    dev.vm.synced_folder "~/Pax", "/home/vagrant/Pax"
+    dev.vm.synced_folder "./backup", "/backup"
+
+    # dev (minikube doesn't seem to want to run with this.  Retest later)
+    # dev.vm.synced_folder "./persist/data", "/data"
+    # dev.vm.synced_folder "./persist/var/lib/localkube", "/var/lib/localkube"
+    # dev.vm.synced_folder "./persist/tmp/hostpath_pv", "/tmp/hostpath_pv"
+    # dev.vm.synced_folder "./persist/tmp/hostpath-provisioner", "/tmp/hostpath-provisioner"
+
+    # Network Configuration (setups up eth1, eth0 remains NAT)
+    #   PUBLIC/PRIVATE 1of2: Uncomment next block for NON-NAT Setting
+    dev.vm.network "public_network",
+                      bridge: [$bridge],
+                      ip: $address
 
     dev.vm.provider "virtualbox" do |vb, override|
       override.vm.box = "bento/ubuntu-16.04"
       #override.vm.box_version = "2.2.9"
       vb.gui = false
-      vb.memory = "3072"
+      vb.memory = "4096"
     end
 
     dev.vm.provision "shell",
                         run: "always",
+                        args: [ $gateway, $interface ],
                         inline: <<-SHELL
       pushd /vagrant/conf
       set -euo pipefail
       chmod 755 setup.sh && ./setup.sh 2>&1 | tee /tmp/install.log
       popd
+
+      # PUBLIC/PRIVATE 2of2: Uncomment next block for NON-NAT Setting
+      # add the direct default gateway
+      route add default gw $1 $2
+      # remove the NAT default gateway
+      eval `route -n | awk '{ if ($8 =="eth0" && $2 != "0.0.0.0") print "route del default gw " $2; }'`
+
     SHELL
 
-    # Install the caching plugin if you want to take advantage of the
-    # cache
+    # Install the caching plugin if you want to take advantage of the cache
     # $ vagrant plugin install vagrant-cachier
     if Vagrant.has_plugin?("vagrant-cachier")
-      # Configure cached packages to be shared between instances of
-      # the same base box.  More info on
-      # http://fgrehm.viewdocs.io/vagrant-cachier/usage
+      # Configure cached packages to be shared between instances of the same base box.
+      # More info on http://fgrehm.viewdocs.io/vagrant-cachier/usage
       config.cache.scope = :machine
     else
       puts "[-] WARN: Subsequent provisions will be much faster"
