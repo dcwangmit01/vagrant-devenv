@@ -232,10 +232,10 @@ if ! which yq; then
     pip install yq
 fi
 
-# install secure: a gpg multiparty encryption wrapper
-if ! which secure; then
-    curl -fsSL https://raw.githubusercontent.com/dcwangmit01/secure/master/install.sh | bash
-fi
+# # install secure: a gpg multiparty encryption wrapper
+# if ! which secure; then
+#     curl -fsSL https://raw.githubusercontent.com/dcwangmit01/secure/master/install.sh | bash
+# fi
 
 # Install gitslave
 if ! which gits; then

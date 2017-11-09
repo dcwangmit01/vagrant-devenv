@@ -2,13 +2,21 @@
 
 Creates a Vagrant machine running on OSX, with the following auto-installed and configured.
 
-* Amazon AWS Cloud Tools: awscli, ecs-cli
-* Rackspace Cloud Tools: rack, nova, supernova, superglance
-* Google Cloud Tools: gcloud
 * Docker Tools: docker, docker-compose
-* Kubernetes Tools: kubectl
+* Kubernetes Tools: kubectl, minikube, helm, kops
+* Cloud tools: Terraform
+* Amazon AWS Cloud Tools: awscli, ecs-cli
+* Google Cloud Tools: gcloud
+* Vmware Tools: govc
+* Languages: golang, nodejs
+* Programming tools: hub, direnv, virtualenv, jinja2, yq, gitslave, emacs
 * Network Tools: nmap, traceroute, whois
-* Languages: golang
+* Golang Tools: glide, protocol buffers
+
+For your dotfiles and dotdirectories in `~/`, it creates files or directories
+in /vagrant/custom, and then symbolically links from `~/`.  This ensures that
+your configuration files are persisted on the host, between rebuilding of
+vagrant machines.
 
 # Preparing your box for Vagrant
 
@@ -33,7 +41,9 @@ brew cask install virtualbox
 brew cask install vagrant
 ```
 
-* Install vbguest plugin
+* Install vbguest plugin (Optional)
+
+Keeps virtualbox guest tools in sync with your version of virtualbox
 
 ```
 vagrant plugin install vagrant-vbguest
@@ -49,21 +59,16 @@ vagrant plugin install vagrant-cachier
 
 All of these will make your life easier:
 
-### Decrypt Private Configurations (Optional)
-
-If you are me:
-
-```
-./bin/secure.sh decrypt
-```
-
 ### Configure Git Configuration (Optional)
 
 Set defaults for your git configuration (email, name, aliases, etc)
 
+Edit ~/.gitconfig, which is actually a symlink to /vagrant/custom/dot.gitconfig
+
 ```
-cp ./conf/dot.gitconfig.example ./conf/dot.gitconfig.private
-edit ./conf/dot.gitconfig.private
+[user]
+	email = you@domain.com
+	name = Firstname Lastname
 ```
 
 ### Configure Google Cloud and Container Engine (Optional)
@@ -104,37 +109,40 @@ gcloud config list
 
 The pre-installed AWS cli commands require configuration to work.
 
-Documentation for configuration is found here [http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html#cli-config-files](AWS CLI Configuration)
+Documentation for configuration is found here
+[http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html#cli-config-files](AWS
+CLI Configuration)
 
+
+Example ~/.aws/config file
 ```
-cp ./conf/dot.aws/config.example ./conf/dot.aws/config.private
-edit ./conf/dot.aws/config.private
+[profile project_alpha]
+output = json
+region = us-west-1
 
-cp ./conf/dot.aws/credentials.example ./conf/dot.aws/credentials.private
-edit ./conf/dot.aws/credentials.private
-```
-
-### Configurate Rackspace CLI Tools (Optional)
-
-The pre-installed Rackspace cli commands require configuration to work.
-
-```
-cp ./conf/dot.rax/dot.supernova.example ./conf/dot.rax/dot.supernova.private
-edit ./conf/dot.rax/dot.supernova.private
+[profile project_beta]
+output = json
+region = us-west-1
 ```
 
-### Configure SSH Keys (Optional)
+Example ~/.aws/credentials file
+```
+[project_alpha]
+aws_access_key_id = <alpha_key_id>
+aws_secret_access_key = <alpha_access_key>
 
-If you'd like to put your ssh directory on the vagrant box, so that you may ssh
-from the vagrant machine as you would your host machine, copy the contents of
-your .ssh directory to ./conf/dot.ssh.private/
+[project_beta]
+aws_access_key_id = <beta_key_id>
+aws_secret_access_key = <beta_access_key>
+```
+
+Then, to switch between AWS accounts, set the right AWS_PROFILE environment variable.
 
 ```
-mkdir ./conf/dot.ssh.private
-cp ~/.ssh/* ./conf/dot.ssh.private/
+export AWS_PROFILE=project_beta
 ```
 
-### Configure Code Directory Mount (Optional)
+### Configure Code Directory Mount from Host (Optional)
 
 If you'd like to mount a directory from your host machine directly into the
 vagrant machine, you may edit the synced folder directive in the Vagrant file.
@@ -163,7 +171,7 @@ The default will mount the host ~/Dev directory to the vagrant /vagrant/Dev dire
 
 ```vagrant suspend```
 
-## Import your key to AWS
+## Import your key to AWS (Optional)
 
 Publish your keypair to every region in AWS that you will use
 
