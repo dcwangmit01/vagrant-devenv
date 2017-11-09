@@ -23,10 +23,6 @@ Vagrant.configure(2) do |config|
   # within the machine from a port on the host machine. In the example below,
   # accessing "localhost:8080" will access port 80 on the guest machine.
   # config.vm.network "forwarded_port", guest: 80, host: 8080
-  config.vm.network "forwarded_port", guest: 80, host: 8080
-  config.vm.network "forwarded_port", guest: 443, host: 8443
-  config.vm.network "forwarded_port", guest: 5000, host: 5000
-  config.vm.network "forwarded_port", guest: 10080, host: 10080
 
   # Create a private network, which allows host-only access to the machine
   # using a specific IP.
@@ -84,8 +80,9 @@ Vagrant.configure(2) do |config|
 
   config.vm.define "dev" do |dev|
     dev.vm.hostname = "devenv"
-    $address = "192.168.3.13"
-    $gateway = "192.168.3.1"
+    $network_type = "private"  # valid values are "public" or "private".  Private uses NAT
+    $address = "192.168.3.13"  # ignored when network_type=="private"
+    $gateway = "192.168.3.1"   # ignored when network_type=="private"
     $interface = "eth1"
     $bridge = "en0: Ethernet"
 
@@ -105,10 +102,17 @@ Vagrant.configure(2) do |config|
     # dev.vm.synced_folder "./persist/tmp/hostpath-provisioner", "/tmp/hostpath-provisioner"
 
     # Network Configuration (setups up eth1, eth0 remains NAT)
-    #   PUBLIC/PRIVATE 1of2: Uncomment next block for NON-NAT Setting
-    dev.vm.network "public_network",
+    if $network_type == "public"
+      dev.vm.network "public_network",
                       bridge: [$bridge],
                       ip: $address
+    else  # network_type == "private"
+      # Only forward host ports to vagrant machine ports for private networks
+      dev.vm.network "forwarded_port", guest: 80, host: 8080
+      dev.vm.network "forwarded_port", guest: 443, host: 8443
+      dev.vm.network "forwarded_port", guest: 5000, host: 5000
+      dev.vm.network "forwarded_port", guest: 10080, host: 10080
+    end
 
     dev.vm.provider "virtualbox" do |vb, override|
       override.vm.box = "bento/ubuntu-16.04"
@@ -119,19 +123,19 @@ Vagrant.configure(2) do |config|
 
     dev.vm.provision "shell",
                         run: "always",
-                        args: [ $gateway, $interface ],
+                        args: [ $gateway, $interface, $network_type ],
                         inline: <<-SHELL
-      pushd /vagrant/conf
       set -euo pipefail
+      pushd /vagrant/conf
       chmod 755 setup.sh && ./setup.sh 2>&1 | tee /tmp/install.log
       popd
 
-      # PUBLIC/PRIVATE 2of2: Uncomment next block for NON-NAT Setting
-      # add the direct default gateway
-      route add default gw $1 $2
-      # remove the NAT default gateway
-      eval `route -n | awk '{ if ($8 =="eth0" && $2 != "0.0.0.0") print "route del default gw " $2; }'`
-
+      if [ "$3" == "public" ]; then
+        # add the direct default gateway
+        route add default gw $1 $2
+        # remove the NAT default gateway
+        eval `route -n | awk '{ if ($8 =="eth0" && $2 != "0.0.0.0") print "route del default gw " $2; }'`
+      fi
     SHELL
 
     # Install the caching plugin if you want to take advantage of the cache
