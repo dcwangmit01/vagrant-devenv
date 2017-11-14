@@ -79,7 +79,7 @@ apt-get -yq install mysql-client unzip dc gnupg moreutils \
     apache2-utils \
     python-pip python-dev \
     xauth qemu-user-static \
-    ansible ntp \
+    ansible ntp ntpdate \
     colordiff socat
 
 #####################################################################

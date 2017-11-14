@@ -92,8 +92,8 @@ Vagrant.configure(2) do |config|
     #   dev.vm.synced_folder "~/Dev", "/vagrant/Dev"
     # end
     # custom: above does not work for symlinks
-    dev.vm.synced_folder "~/Dev", "/home/vagrant/Dev"
-    dev.vm.synced_folder "./backup", "/backup"
+    #dev.vm.synced_folder "~/Dev", "/home/vagrant/Dev"
+    #dev.vm.synced_folder "./backup", "/backup"
 
     # dev (minikube doesn't seem to want to run with this.  Retest later)
     # dev.vm.synced_folder "./persist/data", "/data"
