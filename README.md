@@ -18,6 +18,9 @@ in /vagrant/custom, and then symbolically links from `~/`.  This ensures that
 your configuration files are persisted on the host, between rebuilding of
 vagrant machines.
 
+These instructions are geared towards OSX, although this box should work in
+Windows (intructions not included).
+
 # Preparing your box for Vagrant
 
 ## Preparing your box for Vagrant using Brew (the smart way!):
@@ -37,6 +40,9 @@ brew install git python wget curl gitslave brew-cask tree nmap ssh-copy-id
 * Install vagrant and virtualbox
 
 ```
+# Virtualbox version 5.1.14 is known to be good
+#   Some newer versions have issues
+#   You may want to manually install virtualbox
 brew cask install virtualbox
 brew cask install vagrant
 ```
@@ -158,6 +164,15 @@ The default will mount the host ~/Dev directory to the vagrant /vagrant/Dev dire
 
 
 # Using this Vagrant image
+
+## Get the code
+
+```
+git clone git@github.com:dcwangmit01/vagrant-devenv.git
+# Or if you don't have a github account, use:
+#   git clone https://github.com/dcwangmit01/vagrant-devenv.git
+cd vagrant-devenv
+```
 
 ## Start the virtual machine
 
