@@ -158,7 +158,7 @@ fi
 
 # Install golang into /usr/local/go/bin (requires .bashrc to set path)
 if [ ! -f /usr/local/go/bin/go ]; then
-    PACKAGE=go1.8.linux-amd64.tar.gz
+    PACKAGE=go1.9.linux-amd64.tar.gz
     if [ ! -f $CACHE_DIR/$PACKAGE ]; then
         curl -fsSL https://storage.googleapis.com/golang/$PACKAGE > $CACHE_DIR/$PACKAGE
     fi
@@ -168,7 +168,7 @@ fi
 
 # Install helm into /usr/local/bin
 if [ ! -f /usr/local/bin/helm ]; then
-    PACKAGE=helm-v2.6.1-linux-amd64.tar.gz
+    PACKAGE=helm-v2.7.2-linux-amd64.tar.gz
     if [ ! -f $CACHE_DIR/$PACKAGE ]; then
         curl -fsSL https://kubernetes-helm.storage.googleapis.com/$PACKAGE > $CACHE_DIR/$PACKAGE
     fi
@@ -293,7 +293,7 @@ fi
 
 # install aws kubernetes ops tools
 if ! which kops; then
-    curl -fsSL https://github.com/kubernetes/kops/releases/download/1.7.0/kops-linux-amd64 > /usr/local/bin/kops
+    curl -fsSL https://github.com/kubernetes/kops/releases/download/1.8.0/kops-linux-amd64 > /usr/local/bin/kops
     chmod 755 /usr/local/bin/kops
 fi
 
