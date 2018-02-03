@@ -21,6 +21,7 @@ from_to_dirs=( \
     ["/vagrant/custom/dot.gnupg"]="/home/vagrant/.gnupg" \
     ["/vagrant/custom/dot.gcloud"]="/home/vagrant/.config/gcloud" \
     ["/vagrant/custom/dot.govc"]="/home/vagrant/.govc" \
+    ["/vagrant/custom/dot.helm"]="/home/vagrant/.helm" \
     ["/vagrant/custom/dot.minikube"]="/home/vagrant/.minikube" \
     ["/vagrant/custom/dot.kube"]="/home/vagrant/.kube" )
 for from_dir in "${!from_to_dirs[@]}"; do
@@ -158,9 +159,9 @@ fi
 
 # Install golang into /usr/local/go/bin (requires .bashrc to set path)
 if [ ! -f /usr/local/go/bin/go ]; then
-    PACKAGE=go1.9.linux-amd64.tar.gz
+    PACKAGE=go1.9.3.linux-amd64.tar.gz
     if [ ! -f $CACHE_DIR/$PACKAGE ]; then
-        curl -fsSL https://storage.googleapis.com/golang/$PACKAGE > $CACHE_DIR/$PACKAGE
+        curl -fsSL https://dl.google.com/go/$PACKAGE > $CACHE_DIR/$PACKAGE
     fi
     tar -xzf $CACHE_DIR/$PACKAGE -C /usr/local
     mkdir -p /go
@@ -196,7 +197,7 @@ fi
 
 # Install protocol buffers (requires .bashrc to set path)
 if [ ! -f /usr/local/protoc/bin/protoc ]; then
-    VERSION=3.2.0
+    VERSION=3.5.1
     PACKAGE=protoc-$VERSION-linux-x86_64.zip
     if [ ! -f $CACHE_DIR/$PACKAGE ]; then
 	curl -fsSL https://github.com/google/protobuf/releases/download/v$VERSION/$PACKAGE \
@@ -268,7 +269,7 @@ fi
 
 # Install Terraform from Hashicorp
 if [ ! -f /usr/local/terraform/bin/terraform ]; then
-  VERSION=0.10.2
+  VERSION=0.11.3
   CACHE_DIR=/vagrant/.cache
   DIR=/usr/local/terraform/bin
   mkdir -p $CACHE_DIR
