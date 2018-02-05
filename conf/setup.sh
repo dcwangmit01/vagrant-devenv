@@ -45,6 +45,7 @@ from_to_files=( \
     ["/vagrant/custom/dot.gitconfig"]="/home/vagrant/.gitconfig" \
     ["/vagrant/custom/dot.hub"]="/home/vagrant/.config/hub" \
     ["/vagrant/custom/dot.emacs"]="/home/vagrant/.emacs" \
+    ["/vagrant/custom/dot.gitignore"]="/home/vagrant/.gitignore" \
     ["/vagrant/custom/dot.vimrc"]="/home/vagrant/.vimrc" \
     ["/vagrant/custom/dot.screenrc"]="/home/vagrant/.screenrc" )
 for from_file in "${!from_to_files[@]}"; do

@@ -11,10 +11,16 @@
 .cache
 
 # Exclude secret custom configs
+custom/dot.aws/
 custom/dot.emacs.d/
 custom/dot.gcloud/
 custom/dot.gnupg/
+custom/dot.govc/
 custom/dot.hub
+custom/dot.kube/
+custom/dot.minikube/
 custom/dot.ssh/
 custom/dot.vimrc
+
+
 #######################################
