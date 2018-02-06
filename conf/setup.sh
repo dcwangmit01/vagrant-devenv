@@ -67,6 +67,7 @@ done
 # Setup Operating System and base utils from apt
 
 # Upgrade OS
+apt-add-repository -y ppa:ansible/ansible # Needed to install the latest version of ansible
 apt-get update
 apt-get -y autoremove
 
