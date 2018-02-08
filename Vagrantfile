@@ -88,12 +88,16 @@ Vagrant.configure(2) do |config|
 
     dev.vm.box = "bento/ubuntu-16.04"
 
-    # if File.directory?("~/Dev")
-    #   dev.vm.synced_folder "~/Dev", "/vagrant/Dev"
-    # end
-    # custom: above does not work for symlinks
-    #dev.vm.synced_folder "~/Dev", "/home/vagrant/Dev"
-    #dev.vm.synced_folder "./backup", "/backup"
+    # Mount some directories if they exist
+    if File.directory?(File.expand_path("~/Dev"))
+      dev.vm.synced_folder "~/Dev", "/home/vagrant/Dev"
+    end
+    if File.directory?(File.expand_path("/keybase"))
+      dev.vm.synced_folder "/keybase", "/keybase"
+    end
+    if File.directory?(File.expand_path("backup"))
+      dev.vm.synced_folder "backup", "/backup"
+    end
 
     # dev (minikube doesn't seem to want to run with this.  Retest later)
     # dev.vm.synced_folder "./persist/data", "/data"
