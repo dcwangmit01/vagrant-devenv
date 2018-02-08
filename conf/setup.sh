@@ -192,6 +192,11 @@ if ! which hub; then
     go get -u github.com/github/hub
 fi
 
+# Install "dep" command
+if ! which dep; then
+    go get -u github.com/golang/dep/cmd/dep
+fi
+
 # Install "govc" command (vmware vcenter cli client)
 if ! which govc; then
     go get -u github.com/vmware/govmomi/govc
