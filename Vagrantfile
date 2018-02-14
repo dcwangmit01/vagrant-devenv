@@ -72,7 +72,18 @@ Vagrant.configure(2) do |config|
   #####################################################################
   # Custom Configuration
 
-  # TODO: http://ermaker.github.io/blog/2015/11/18/change-insecure-key-to-my-own-key-on-vagrant.html
+  # Auto-install some plugins
+  required_plugins = %w( vagrant-vbguest vagrant-disksize vagrant-cachier )
+  _retry = false
+  required_plugins.each do |plugin|
+    unless Vagrant.has_plugin? plugin
+      system "vagrant plugin install #{plugin}"
+      _retry=true
+    end
+  end
+  if (_retry)
+    exec "vagrant " + ARGV.join(' ')
+  end
 
   # Enable ssh forwarding for ssh-agent
   config.ssh.forward_x11 = true
@@ -87,6 +98,7 @@ Vagrant.configure(2) do |config|
     $bridge = "en0: Ethernet"
 
     dev.vm.box = "bento/ubuntu-16.04"
+    dev.disksize.size = "96GB"
 
     # Mount some directories if they exist
     if File.directory?(File.expand_path("~/Dev"))
