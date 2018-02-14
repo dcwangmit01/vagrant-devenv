@@ -110,6 +110,9 @@ Vagrant.configure(2) do |config|
     if File.directory?(File.expand_path("backup"))
       dev.vm.synced_folder "backup", "/backup"
     end
+    if File.directory?(File.expand_path("gopath"))
+      dev.vm.synced_folder "gopath", "/go"
+    end
 
     # dev (minikube doesn't seem to want to run with this.  Retest later)
     # dev.vm.synced_folder "./persist/data", "/data"

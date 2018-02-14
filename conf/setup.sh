@@ -46,8 +46,12 @@ from_to_files=( \
     ["/vagrant/custom/dot.hub"]="/home/vagrant/.config/hub" \
     ["/vagrant/custom/dot.emacs"]="/home/vagrant/.emacs" \
     ["/vagrant/custom/dot.gitignore"]="/home/vagrant/.gitignore" \
-    ["/vagrant/custom/dot.vimrc"]="/home/vagrant/.vimrc" \
-    ["/vagrant/custom/dot.screenrc"]="/home/vagrant/.screenrc" )
+    ["/vagrant/custom/dot.screenrc"]="/home/vagrant/.screenrc" \
+    ["/vagrant/custom/dot.nova"]="/home/vagrant/.nova" \
+    ["/vagrant/custom/dot.supernova"]="/home/vagrant/.supernova" \
+    ["/vagrant/custom/dot.superglance"]="/home/vagrant/.superglance" \
+    ["/vagrant/custom/dot.vimrc"]="/home/vagrant/.vimrc" )
+
 for from_file in "${!from_to_files[@]}"; do
     to_file=${from_to_files[$from_file]}
     # Ensure custom config file exists and is empty
@@ -260,20 +264,6 @@ if ! which gits; then
     popd
 fi
 
-# install npm and nodejs, and upgrade npm
-if ! which npm; then
-    apt-get -yq install nodejs npm
-    ln -s /usr/bin/nodejs /usr/bin/node
-    npm install -g npm
-fi
-
-# install node version manager
-NVM_HOME="/home/vagrant/.nvm"
-if [ ! -d $NVM_HOME ]; then
-    curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.2/install.sh \
-      | sudo --login -u vagrant
-fi
-
 # Install Terraform from Hashicorp
 if [ ! -f /usr/local/terraform/bin/terraform ]; then
   VERSION=0.11.3
@@ -339,3 +329,37 @@ fi
 #     ln -s /usr/local/electron-v1.4.15/electron /usr/local/bin/electron
 # fi
 
+
+# install nova
+if ! which nova; then
+    pip install rackspace-novaclient
+fi
+
+# install supernova
+if ! which supernova; then
+    pip install supernova
+    # supernova doesn't work unless we have more more recent version of python requests
+    pip install requests --upgrade
+fi
+
+# install superglance
+if ! which superglance; then
+    apt-get install -y python-dev python-pip
+    apt-get install -y libffi-dev libssl-dev
+    pip install git+https://github.com/rtgoodwin/superglance.git@master
+fi
+
+
+# # install npm and nodejs, and upgrade npm
+# if ! which npm; then
+#     apt-get -yq install nodejs npm
+#     ln -s /usr/bin/nodejs /usr/bin/node
+#     npm install -g npm
+# fi
+
+# # install node version manager
+# NVM_HOME="/home/vagrant/.nvm"
+# if [ ! -d $NVM_HOME ]; then
+#     curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.2/install.sh \
+#       | sudo --login -u vagrant
+# fi
