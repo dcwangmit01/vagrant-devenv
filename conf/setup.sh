@@ -17,11 +17,13 @@ declare -A from_to_dirs
 from_to_dirs=( \
     ["/vagrant/custom/dot.ssh"]="/home/vagrant/.ssh" \
     ["/vagrant/custom/dot.aws"]="/home/vagrant/.aws" \
+    ["/vagrant/custom/dot.docker"]="/home/vagrant/.docker" \
     ["/vagrant/custom/dot.emacs.d"]="/home/vagrant/.emacs.d" \
     ["/vagrant/custom/dot.gnupg"]="/home/vagrant/.gnupg" \
     ["/vagrant/custom/dot.gcloud"]="/home/vagrant/.config/gcloud" \
     ["/vagrant/custom/dot.govc"]="/home/vagrant/.govc" \
     ["/vagrant/custom/dot.helm"]="/home/vagrant/.helm" \
+    ["/vagrant/custom/dot.mc"]="/home/vagrant/.mc" \
     ["/vagrant/custom/dot.minikube"]="/home/vagrant/.minikube" \
     ["/vagrant/custom/dot.kube"]="/home/vagrant/.kube" )
 for from_dir in "${!from_to_dirs[@]}"; do
@@ -82,7 +84,7 @@ apt-get -y autoremove
 # xauth: to forward X11 programs to the host machine
 apt-get -yq install mysql-client unzip dc gnupg moreutils \
     git bridge-utils traceroute nmap dhcpdump wget curl siege whois \
-    emacs24-nox screen tree git \
+    emacs24-nox screen tree git jq \
     apache2-utils \
     python-pip python-dev \
     xauth qemu-user-static \
@@ -264,6 +266,12 @@ if ! which gits; then
     popd
 fi
 
+# Install Minio cli
+if [ ! -f /usr/local/bin/mc ]; then
+  curl -fsSL https://dl.minio.io/client/mc/release/linux-amd64/mc > /usr/local/bin/mc
+  chmod a+rx /usr/local/bin/mc
+fi
+
 # Install Terraform from Hashicorp
 if [ ! -f /usr/local/terraform/bin/terraform ]; then
   VERSION=0.11.3
@@ -287,6 +295,8 @@ fi
 # install aws command line interface: https://aws.amazon.com/cli/
 if ! which aws; then
     pip install awscli
+    pip install -U boto
+    pip install -U boto3
 fi
 
 # install aws kubernetes ops tools
@@ -333,6 +343,7 @@ fi
 # install nova
 if ! which nova; then
     pip install rackspace-novaclient
+    pip install -U cryptography
 fi
 
 # install supernova

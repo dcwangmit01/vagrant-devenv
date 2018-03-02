@@ -73,7 +73,8 @@ Vagrant.configure(2) do |config|
   # Custom Configuration
 
   # Auto-install some plugins
-  required_plugins = %w( vagrant-vbguest vagrant-disksize vagrant-cachier )
+  # vagrant-cachier
+  required_plugins = %w( vagrant-vbguest vagrant-disksize )
   _retry = false
   required_plugins.each do |plugin|
     unless Vagrant.has_plugin? plugin
@@ -163,10 +164,6 @@ Vagrant.configure(2) do |config|
       # Configure cached packages to be shared between instances of the same base box.
       # More info on http://fgrehm.viewdocs.io/vagrant-cachier/usage
       config.cache.scope = :machine
-    else
-      puts "[-] WARN: Subsequent provisions will be much faster"
-      puts "    if you install vagrant-cachier:"
-      puts "  vagrant plugin install vagrant-cachier"
     end
   end
 end
