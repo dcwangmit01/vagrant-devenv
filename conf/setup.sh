@@ -241,6 +241,10 @@ if ! which j2; then
     pip install j2cli
 fi
 
+if ! which jinja2; then
+    pip install jinja2-cli jinja2-cli[yaml]
+fi
+
 # install python yq cli tool (jq for yaml)
 if ! which yq; then
     pip install yq
