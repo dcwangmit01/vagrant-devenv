@@ -12,6 +12,7 @@ Creates a Vagrant machine running on OSX, with the following auto-installed and 
 * Programming tools: hub, direnv, virtualenv, jinja2, yq, gitslave, emacs
 * Network Tools: nmap, traceroute, whois
 * Golang Tools: glide, protocol buffers
+* Openstack Tools: nova, supernova, superglance
 
 For your dotfiles and dotdirectories in `~/`, it creates files or directories
 in /vagrant/custom, and then symbolically links from `~/`.  This ensures that
@@ -45,20 +46,6 @@ brew install git python wget curl gitslave brew-cask tree nmap ssh-copy-id
 #   You may want to manually install virtualbox
 brew cask install virtualbox
 brew cask install vagrant
-```
-
-* Install vbguest plugin (Optional)
-
-Keeps virtualbox guest tools in sync with your version of virtualbox
-
-```
-vagrant plugin install vagrant-vbguest
-```
-
-* Install cachier plugin (caches the APT, download, and Maven resources so that the box builds faster)
-
-```
-vagrant plugin install vagrant-cachier
 ```
 
 # Configure a few things (Recommended)
@@ -157,8 +144,8 @@ The default will mount the host ~/Dev directory to the vagrant /vagrant/Dev dire
 ```
 # edit ./Vagrantfile if you have your directories to mount
 
-    if File.directory?("~/Dev")
-      dev.vm.synced_folder "~/Dev", "/vagrant/Dev"
+    if File.directory?(File.expand_path("~/Dev"))
+      dev.vm.synced_folder "~/Dev", "/home/vagrant/Dev"
     end
 ```
 
