@@ -1,6 +1,21 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
+#####################################################################
+# Checks
+
+keybase_root = nil
+if File.directory?("/keybase/team")
+  keybase_root = "/keybase"
+elsif File.directory?("k:/team")
+  keybase_root = "k:"
+else
+  puts "WARNING: Optional keybase.io VirtualFS is not present"
+  puts "  On Linux and OSX, KeybaseFS would be mounted under /keybase"
+  puts "  On Windows, KeybaseFS would be mounted under k:"
+end
+#####################################################################
+
 # All Vagrant configuration is done below. The "2" in Vagrant.configure
 # configures the configuration version (we support older styles for
 # backwards compatibility). Please don't change it unless you know what
@@ -73,7 +88,7 @@ Vagrant.configure(2) do |config|
   # Custom Configuration
 
   # Auto-install some plugins
-  # vagrant-cachier
+  # vagrant-cachier, vagrant-proxyconf
   required_plugins = %w( vagrant-vbguest vagrant-disksize )
   _retry = false
   required_plugins.each do |plugin|
@@ -105,14 +120,16 @@ Vagrant.configure(2) do |config|
     if File.directory?(File.expand_path("~/Dev"))
       dev.vm.synced_folder "~/Dev", "/home/vagrant/Dev"
     end
-    if File.directory?(File.expand_path("/keybase"))
-      dev.vm.synced_folder "/keybase", "/keybase"
-    end
     if File.directory?(File.expand_path("backup"))
       dev.vm.synced_folder "backup", "/backup"
     end
     if File.directory?(File.expand_path("gopath"))
       dev.vm.synced_folder "gopath", "/go"
+    end
+    ## Place to store secrets.
+    ## ATTENTION: Requires Keybase client activation/sign-in on host OS.
+    if !keybase_root.nil? && File.directory?(File.expand_path(keybase_root))
+      config.vm.synced_folder keybase_root, "/keybase"
     end
 
     # dev (minikube doesn't seem to want to run with this.  Retest later)
@@ -166,4 +183,12 @@ Vagrant.configure(2) do |config|
       config.cache.scope = :machine
     end
   end
+
+  # If host OS has proxy variables set, configure guest accordingly.
+  if Vagrant.has_plugin?("vagrant-proxyconf")
+    config.proxy.http     = ENV['HTTP_PROXY']
+    config.proxy.https    = ENV['HTTPS_PROXY']
+    config.proxy.no_proxy = ENV['NO_PROXY']
+  end
+
 end
