@@ -9,3 +9,5 @@
 	default = simple
 [core]
 	excludesfile = /home/vagrant/.gitignore
+[color]
+	ui = auto

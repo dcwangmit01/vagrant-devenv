@@ -10,10 +10,13 @@ if File.directory?("/keybase/team")
 elsif File.directory?("k:/team")
   keybase_root = "k:"
 else
-  puts "WARNING: Optional keybase.io VirtualFS is not present"
+  puts "WARNING: Required keybase.io VirtualFS is not present"
   puts "  On Linux and OSX, KeybaseFS would be mounted under /keybase"
   puts "  On Windows, KeybaseFS would be mounted under k:"
+  puts "This Vagrant automation as well as virtual machine configuration"
+  puts "  depend on the secrets in keybase.io"
 end
+
 #####################################################################
 
 # All Vagrant configuration is done below. The "2" in Vagrant.configure
@@ -126,11 +129,24 @@ Vagrant.configure(2) do |config|
     if File.directory?(File.expand_path("gopath"))
       dev.vm.synced_folder "gopath", "/go"
     end
+
     ## Place to store secrets.
     ## ATTENTION: Requires Keybase client activation/sign-in on host OS.
-    if !keybase_root.nil? && File.directory?(File.expand_path(keybase_root))
-      config.vm.synced_folder keybase_root, "/keybase"
-    end
+    require 'pathname'
+    keybase_dirs = [ "private", "public", "team" ]
+    keybase_dirs.each { |dir|
+      guest_path = "/keybase/" + dir
+      host_path = String(Pathname.new(keybase_root + "/" + dir).realpath)
+
+      if File.directory?(host_path)
+        # parent dirs to be auto-created by synced_folder mount
+        dev.vm.synced_folder host_path, guest_path
+      else
+        puts "WARNING: Failed to mount keybase.io VirtualFS"
+        puts "  host_path: " + host_path
+        puts "  guest_path: " + guest_path
+      end
+    }
 
     # dev (minikube doesn't seem to want to run with this.  Retest later)
     # dev.vm.synced_folder "./persist/data", "/data"
