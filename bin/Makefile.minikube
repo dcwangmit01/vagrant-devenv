@@ -1,0 +1,90 @@
+.DEFAULT_GOAL=help
+.PHONY: start stop mrclean
+
+MINIKUBE_ENV := \
+	export PATH=$(PATH); \
+	export KUBECONFIG=$(KUBECONFIG); \
+	export MINIKUBE_HOME=$(MINIKUBE_HOME); \
+	export GOPATH=$(GOPATH);
+
+ENV_CURRENT:=`env`
+ENV_DEPS:=CLUSTER_NAME # direnv
+ENV_DEPS:=KUBECONFIG # kubernetes
+ENV_DEPS+=MINIKUBE_HOME # minikube
+ENV_DEPS+=GOPATH # golang
+ENV_DEPS+=PATH # bin path
+
+check:  ## Check enviroment configuration
+	@for envvar in $(ENV_DEPS); do \
+	  if ! (echo "$(ENV_CURRENT)" | grep "$${envvar}=" > /dev/null); then \
+	    echo "Enviroment Variable [$$envvar] must be defined"; \
+	    return 1; \
+	  fi; \
+	done
+
+start: check  ## Start minikube on the local system
+
+	@# Exit early if minikube is already running
+	@if (minikube status | grep Running &>/dev/null); then \
+	  echo "Minikube is already running"; \
+	  false; \
+	fi
+
+	@# Run the start script, manually passing ENV variables
+	@#   Path to minikube and kubectl must be in enviroment
+	sudo -i -- $(MINIKUBE_ENV) $(realpath ../../common/minikube/minikube_init.sh)
+	sudo chown -R $(USER):$(USER) $(MINIKUBE_HOME)
+
+	@# Edit the cluster name from minikube to be the real cluster name
+	$$GOPATH/bin/yq w --inplace $(KUBECONFIG) current-context $(CLUSTER_NAME)
+	$$GOPATH/bin/yq w --inplace $(KUBECONFIG) contexts[0].name $(CLUSTER_NAME)
+
+	@# Initialize helm
+	helm init --wait || true
+
+	@# Add a storageclass named "default" (but allow "standard" continue to be default)
+	@if ! (kubectl get storageclass default -o yaml | grep "name: default" &>/dev/null); then \
+	  sudo cat /etc/kubernetes/addons/storageclass.yaml \
+	    | $(GOPATH)/bin/yq w - metadata.name default \
+	    | sed 's@true@false@g' | \
+	    kubectl create -f -; \
+	fi
+
+	@# Print out some status output
+	kubectl cluster-info
+	kubectl get nodes
+
+stop: check ## Disables minikube on the local system
+	@# stop minikube (does not seem to work with --vm-driver=none)
+	sudo -i -- $(MINIKUBE_ENV) minikube stop &>/dev/null || true
+
+	@# Disable the services.
+	@#   systemctl services will start minikube upon next reboot.
+	for svc in "localkube" "kubelet"; do sudo systemctl disable "$$svc".service &>/dev/null || true; done
+
+destroy: check stop ## Destroy all traces of minikube on the local system
+	@# delete may be a no-op on minikube --vm-driver=none
+	sudo -i -- $(MINIKUBE_ENV) minikube delete &>/dev/null || true
+
+	@# minikube does not clean up containers after delete
+	@#   https://github.com/kubernetes/minikube/issues/1769
+	docker rm -f $$(docker ps -aq --filter name=k8s) 2>/dev/null || true
+
+	@# Clean up leftover files (except cache)
+	find $MINIKUBE_HOME -type f | grep -v -E '(cache)' | xargs rm -rf 2>/dev/null
+
+status:  ## Print out minikube status
+	sudo -i -- $(MINIKUBE_ENV) minikube status
+
+minikube_save: stop  ## Save minikube dirs to /vagrant/persist.tar.bz
+	cd / && sudo tar cjvpf /vagrant/persist.tar.bz /persist
+
+minikube_restore:  ## Restore minikube dirs to /persist
+	cd / && sudo tar xjvpf vagrant/persist.tar.bz --same-owner
+
+help:  ## Print list of Makefile targets
+	@# Taken from https://github.com/spf13/hugo/blob/master/Makefile
+	@grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
+	  cut -d ":" -f1- | \
+	  awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
+
